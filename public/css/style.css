@@ -1,0 +1,666 @@
+/**
+ * Barangay Lika Health Monitoring System - Public Health Integrity Theme
+ * Scoped styling stylesheet designed to avoid conflicts with global rules.
+ * Integrated with CSS Variables for theme adjustments and dark-mode support.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Isolated Stylesheet Root under the health-theme scope */
+:root {
+    /* Color Palette */
+    --health-primary: #0F52BA;
+    /* Healthcare Blue */
+    --health-primary-hover: #0C4399;
+    /* Deep Healthcare Blue */
+    --health-primary-light: rgba(15, 82, 186, 0.08);
+
+    --health-secondary: #008080;
+    /* Clinical Teal */
+    --health-secondary-hover: #006666;
+
+    --health-bg-surface: #F8F9FF;
+    /* Light clean clinical backdrop */
+    --health-card-bg: #FFFFFF;
+
+    /* Sidebar Specific Styling (Midnight Healthcare Blue Gradients - System Wide) */
+    --health-sidebar-bg: linear-gradient(180deg, #0A1931 0%, #050E1A 100%);
+    --health-sidebar-border: rgba(15, 82, 186, 0.15);
+
+    /* Text colors */
+    --health-text-main: #1C2434;
+    /* Off-black for high contrast read */
+    --health-text-muted: #5C677D;
+    /* Accessible dark grey */
+    --health-text-light: #8E9BAE;
+
+    /* Status indicators */
+    --health-success: #2E7D32;
+    /* Forest/Clinical Green */
+    --health-success-bg: rgba(46, 125, 50, 0.1);
+    --health-warning: #ED6C02;
+    /* Clinical Orange Alert */
+    --health-warning-bg: rgba(237, 108, 2, 0.1);
+    --health-danger: #D32F2F;
+    /* Medical Red */
+    --health-danger-bg: rgba(211, 47, 47, 0.1);
+    --health-info: #0288D1;
+    /* Diagnostic Light Blue */
+    --health-info-bg: rgba(2, 136, 209, 0.1);
+
+    /* Gender specific colors for health indexing */
+    --health-gender-male: #0D6EFD;
+    --health-gender-male-bg: rgba(13, 110, 253, 0.1);
+    --health-gender-female: #D81B60;
+    --health-gender-female-bg: rgba(216, 27, 96, 0.1);
+
+    /* Border & shadow values */
+    --health-border-color: #E2E8F0;
+    --health-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+    --health-shadow-md: 0 4px 6px -1px rgba(15, 82, 186, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --health-shadow-lg: 0 10px 15px -3px rgba(15, 82, 186, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+    --health-shadow-hover: 0 20px 25px -5px rgba(15, 82, 186, 0.12), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+    /* Structural sizing */
+    --health-sidebar-width: 280px;
+    --health-topbar-height: 70px;
+    --health-max-container: 100%;
+    --health-border-radius: 12px;
+    --health-transition-normal: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --health-transition-fast: all 0.15s ease;
+}
+
+.health-theme {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--health-bg-surface) !important;
+    color: var(--health-text-main) !important;
+    min-height: 100vh;
+}
+
+/* Dark Mode Overrides scoped locally within [data-bs-theme="dark"] parent or .dark-mode */
+[data-bs-theme="dark"] {
+    --health-bg-surface: #0B0F19;
+    /* Dark clinical slate */
+    --health-card-bg: #141A29;
+    /* Deep health background card */
+    --health-text-main: #F1F5F9;
+    --health-text-muted: #94A3B8;
+    --health-text-light: #64748B;
+    --health-border-color: #1E293B;
+    --health-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+    --health-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    --health-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+
+    --health-primary-light: rgba(15, 82, 186, 0.25);
+    --health-success-bg: rgba(46, 125, 50, 0.2);
+    --health-warning-bg: rgba(237, 108, 2, 0.2);
+    --health-danger-bg: rgba(211, 47, 47, 0.2);
+    --health-info-bg: rgba(2, 136, 209, 0.2);
+
+    /* Sidebar Specific Styling (Midnight Healthcare Blue Gradients) */
+    --health-sidebar-bg: linear-gradient(180deg, #0A1931 0%, #050E1A 100%);
+    --health-sidebar-border: rgba(15, 82, 186, 0.18);
+
+    /* Gender specific colors for health indexing */
+    --health-gender-male: #60a5fa;
+    --health-gender-male-bg: rgba(96, 165, 250, 0.15);
+    --health-gender-female: #f472b6;
+    --health-gender-female-bg: rgba(244, 114, 182, 0.15);
+}
+
+/* Dark Mode Overrides for text helper classes */
+[data-bs-theme="dark"] .health-theme .text-dark,
+.health-theme.dark-mode .text-dark,
+[data-bs-theme="dark"] .health-theme .text-black,
+.health-theme.dark-mode .text-black {
+    color: var(--health-text-main) !important;
+}
+
+/* Base resets & typography nested inside health-theme */
+.health-theme h1,
+.health-theme h2,
+.health-theme h3,
+.health-theme h4,
+.health-theme h5,
+.health-theme h6 {
+    color: var(--health-text-main);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+}
+
+.health-theme a {
+    color: var(--health-primary);
+    text-decoration: none;
+    transition: var(--health-transition-fast);
+}
+
+.health-theme a:hover {
+    color: var(--health-primary-hover);
+}
+
+/* Layout Framework */
+.health-layout-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--health-bg-surface);
+    position: relative;
+    width: 100%;
+}
+
+/* Fixed Sidebar Navigation (SideNavBar) */
+.health-sidebar {
+    width: var(--health-sidebar-width);
+    background: var(--health-sidebar-bg);
+    border-right: 1px solid var(--health-sidebar-border);
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    transition: var(--health-transition-normal);
+}
+
+.health-sidebar-header {
+    height: var(--health-topbar-height);
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--health-sidebar-border);
+    font-weight: 700;
+    color: var(--health-primary);
+    font-size: 1.15rem;
+    gap: 0.75rem;
+}
+
+.health-sidebar-header i {
+    font-size: 1.4rem;
+}
+
+.health-sidebar-menu {
+    flex: 1;
+    overflow: hidden;
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.health-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 0.85rem 1rem;
+    color: var(--health-text-muted) !important;
+    font-size: 0.925rem;
+    font-weight: 500;
+    border-radius: 8px;
+    gap: 0.75rem;
+    transition: var(--health-transition-normal);
+}
+
+.health-menu-item i {
+    font-size: 1.15rem;
+    color: var(--health-text-light);
+    transition: var(--health-transition-normal);
+}
+
+.health-menu-item:hover {
+    background-color: var(--health-bg-surface);
+    color: var(--health-primary) !important;
+}
+
+.health-menu-item:hover i {
+    color: var(--health-primary);
+}
+
+.health-menu-item.active {
+    background-color: var(--health-primary-light) !important;
+    color: var(--health-primary) !important;
+    font-weight: 600;
+}
+
+.health-menu-item.active i {
+    color: var(--health-primary);
+}
+
+.health-sidebar-footer {
+    padding: 1.25rem 1rem;
+    border-top: 1px solid var(--health-sidebar-border);
+}
+
+/* Scoped overrides to force dark appearance on sidebar links/header/footer */
+.health-sidebar .health-menu-item {
+    color: #abbbd2 !important;
+}
+
+.health-sidebar .health-menu-item i {
+    color: #64748b;
+}
+
+.health-sidebar .health-menu-item:hover {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+    color: #ffffff !important;
+}
+
+.health-sidebar .health-menu-item:hover i {
+    color: #ffffff;
+}
+
+.health-sidebar .health-menu-item.active {
+    background-color: rgba(15, 82, 186, 0.25) !important;
+    color: #38bdf8 !important;
+}
+
+.health-sidebar .health-menu-item.active i {
+    color: #38bdf8;
+}
+
+.health-sidebar-header a {
+    color: #ffffff !important;
+}
+
+.health-sidebar-header a:hover {
+    color: #38bdf8 !important;
+}
+
+.health-sidebar-header a .text-primary,
+.health-sidebar-header a .bi-heart-pulse-fill {
+    color: #38bdf8 !important;
+}
+
+/* Top Utility Bar (TopNavBar) */
+.health-topbar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: var(--health-sidebar-width);
+    height: var(--health-topbar-height);
+    background-color: var(--health-card-bg) !important;
+    border-bottom: 1px solid var(--health-border-color) !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    z-index: 999;
+    transition: var(--health-transition-normal);
+}
+
+.health-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.health-topbar-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--health-text-main);
+}
+
+.health-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.health-sys-datetime {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--health-text-muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.health-user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-left: 1.25rem;
+    border-left: 1px solid var(--health-border-color);
+}
+
+.health-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background-color: var(--health-primary-light);
+    color: var(--health-primary);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(15, 82, 186, 0.2);
+}
+
+.health-user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.health-user-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--health-text-main);
+    line-height: 1.2;
+}
+
+.health-user-role {
+    font-size: 0.75rem;
+    color: var(--health-text-muted);
+}
+
+/* ========================================================================= */
+/* BOOTSTRAP OVERRIDES (SCOPED)                                              */
+/* ========================================================================= */
+
+/* Content Wrapper mapping */
+.health-theme .main-content-wrapper {
+    flex: 1;
+    margin-left: var(--health-sidebar-width);
+    padding-top: var(--health-topbar-height);
+    min-height: 100vh;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+    padding-bottom: 3rem !important;
+    background-color: var(--health-bg-surface) !important;
+    transition: var(--health-transition-normal);
+}
+
+/* Responsive constraints for screens smaller than desktop (992px) */
+@media (max-width: 991.98px) {
+    .health-sidebar {
+        transform: translateX(-100%);
+    }
+
+    .health-sidebar.show {
+        transform: translateX(0);
+    }
+
+    .health-topbar {
+        left: 0 !important;
+    }
+
+    .health-theme .main-content-wrapper {
+        margin-left: 0 !important;
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+    }
+}
+
+/* Scoped card mapping */
+.health-theme .card {
+    background-color: var(--health-card-bg) !important;
+    border: 1px solid var(--health-border-color) !important;
+    border-radius: var(--health-border-radius) !important;
+    box-shadow: var(--health-shadow-sm) !important;
+    padding: 1.5rem;
+    transition: var(--health-transition-normal) !important;
+    overflow: hidden;
+}
+
+.health-theme .card:hover {
+    box-shadow: var(--health-shadow-md) !important;
+    transform: translateY(-2px) !important;
+}
+
+.health-theme .card-header {
+    background-color: transparent !important;
+    border-bottom: 1px solid var(--health-border-color) !important;
+    padding: 0 0 1rem 0 !important;
+    margin-bottom: 1.25rem !important;
+}
+
+/* Metric card mapping */
+.health-theme .metric-card {
+    border: 1px solid var(--health-border-color) !important;
+    box-shadow: var(--health-shadow-sm) !important;
+    background-color: var(--health-card-bg) !important;
+    color: var(--health-text-main) !important;
+}
+
+.health-theme .metric-card.bg-primary {
+    border-left: 4px solid var(--health-primary) !important;
+    background: var(--health-card-bg) !important;
+}
+
+.health-theme .metric-card.bg-success {
+    border-left: 4px solid var(--health-success) !important;
+    background: var(--health-card-bg) !important;
+}
+
+.health-theme .metric-card.bg-info {
+    border-left: 4px solid var(--health-info) !important;
+    background: var(--health-card-bg) !important;
+}
+
+.health-theme .metric-card.bg-warning {
+    border-left: 4px solid var(--health-warning) !important;
+    background: var(--health-card-bg) !important;
+}
+
+.health-theme .metric-card .fs-1 {
+    color: var(--health-primary) !important;
+    opacity: 0.25 !important;
+}
+
+.health-theme .metric-card h3 {
+    font-size: 1.85rem !important;
+    font-weight: 700 !important;
+    color: var(--health-text-main) !important;
+}
+
+.health-theme .metric-card span {
+    color: var(--health-text-muted) !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    font-size: 0.8rem !important;
+    letter-spacing: 0.05em !important;
+}
+
+/* Scoped tables mapping */
+.health-theme .table {
+    background-color: var(--health-card-bg) !important;
+    border-collapse: collapse !important;
+    width: 100% !important;
+    margin-bottom: 0 !important;
+}
+
+.health-theme .table th {
+    background-color: var(--health-bg-surface) !important;
+    color: var(--health-text-muted) !important;
+    font-weight: 600 !important;
+    font-size: 0.8rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    padding: 1rem 1.25rem !important;
+    border-bottom: 1px solid var(--health-border-color) !important;
+    border-top: none !important;
+}
+
+.health-theme .table td {
+    padding: 0.95rem 1.25rem !important;
+    border-bottom: 1px solid var(--health-border-color) !important;
+    color: var(--health-text-main) !important;
+    font-size: 0.875rem !important;
+    vertical-align: middle !important;
+    background-color: transparent !important;
+}
+
+.health-theme .table tbody tr:hover {
+    background-color: rgba(15, 82, 186, 0.02) !important;
+}
+
+.health-theme .table-light {
+    --bs-table-bg: var(--health-bg-surface) !important;
+}
+
+/* Scoped badges */
+.health-theme .badge {
+    padding: 0.35rem 0.75rem !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    border-radius: 30px !important;
+}
+
+.health-theme .badge.bg-success {
+    background-color: var(--health-success-bg) !important;
+    color: var(--health-success) !important;
+    border: 1px solid rgba(46, 125, 50, 0.2) !important;
+}
+
+.health-theme .badge.bg-warning {
+    background-color: var(--health-warning-bg) !important;
+    color: var(--health-warning) !important;
+    border: 1px solid rgba(237, 108, 2, 0.2) !important;
+}
+
+.health-theme .badge.bg-danger {
+    background-color: var(--health-danger-bg) !important;
+    color: var(--health-danger) !important;
+    border: 1px solid rgba(211, 47, 47, 0.2) !important;
+}
+
+.health-theme .badge.bg-info {
+    background-color: var(--health-info-bg) !important;
+    color: var(--health-info) !important;
+    border: 1px solid rgba(2, 136, 209, 0.2) !important;
+}
+
+.badge.bg-light {
+    background-color: rgba(142, 155, 174, 0.1) !important;
+    color: var(--health-text-muted) !important;
+    border: 1px solid var(--health-border-color) !important;
+}
+
+/* Gender Badge Styling */
+.badge-gender-male {
+    background-color: var(--health-gender-male-bg) !important;
+    color: var(--health-gender-male) !important;
+    border: 1px solid rgba(13, 110, 253, 0.25) !important;
+}
+
+.badge-gender-female {
+    background-color: var(--health-gender-female-bg) !important;
+    color: var(--health-gender-female) !important;
+    border: 1px solid rgba(216, 27, 96, 0.25) !important;
+}
+
+.badge-gender-other {
+    background-color: rgba(148, 163, 184, 0.1) !important;
+    color: var(--health-text-muted) !important;
+    border: 1px solid var(--health-border-color) !important;
+}
+
+.bg-light {
+    background-color: var(--health-bg-surface) !important;
+}
+
+.border {
+    border-color: var(--health-border-color) !important;
+}
+
+/* Form Controls & Inputs mapping */
+.form-label {
+    font-size: 0.825rem !important;
+    font-weight: 600 !important;
+    color: var(--health-text-muted) !important;
+    margin-bottom: 0.375rem !important;
+}
+
+.form-control,
+.form-select {
+    background-color: var(--health-card-bg) !important;
+    border: 1px solid var(--health-border-color) !important;
+    color: var(--health-text-main) !important;
+    padding: 0.65rem 0.85rem !important;
+    font-size: 0.875rem !important;
+    border-radius: 8px !important;
+    transition: var(--health-transition-fast) !important;
+    box-shadow: none !important;
+}
+
+/* Force theme colors on disabled/readonly elements (like Flatpickr inputs) */
+.form-control[readonly],
+.form-control:disabled,
+.form-select:disabled {
+    background-color: var(--health-card-bg) !important;
+    color: var(--health-text-main) !important;
+    opacity: 0.85;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--health-primary) !important;
+    box-shadow: 0 0 0 3px rgba(15, 82, 186, 0.15) !important;
+}
+
+textarea.form-control {
+    min-height: 100px !important;
+}
+
+/* Scoped button mappings */
+.health-theme .btn-primary {
+    background-color: var(--health-primary) !important;
+    border-color: var(--health-primary) !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    padding: 0.55rem 1.25rem !important;
+    transition: var(--health-transition-fast) !important;
+}
+
+.health-theme .btn-primary:hover {
+    background-color: var(--health-primary-hover) !important;
+    border-color: var(--health-primary-hover) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 10px rgba(15, 82, 186, 0.2) !important;
+}
+
+.health-theme .btn-outline-secondary {
+    background-color: transparent !important;
+    border-color: var(--health-border-color) !important;
+    color: var(--health-text-muted) !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    padding: 0.55rem 1.25rem !important;
+    transition: var(--health-transition-fast) !important;
+}
+
+.health-theme .btn-outline-secondary:hover {
+    border-color: var(--health-primary) !important;
+    color: var(--health-primary) !important;
+    background-color: var(--health-primary-light) !important;
+}
+
+/* Modal content & footer color overrides (targeted globally for Bootstrap modals moved to body root) */
+.modal-content {
+    background-color: var(--health-card-bg) !important;
+    color: var(--health-text-main) !important;
+    border: 1px solid var(--health-border-color) !important;
+}
+
+.modal-footer.bg-light {
+    background-color: var(--health-card-bg) !important;
+    border-top: 1px solid var(--health-border-color) !important;
+}
+
+/* SweetAlert customization scope overlay (ensuring cohesive styling) */
+.swal2-popup {
+    font-family: 'Inter', sans-serif !important;
+    border-radius: var(--health-border-radius) !important;
+    border: 1px solid var(--health-border-color) !important;
+    background: var(--health-card-bg) !important;
+    color: var(--health-text-main) !important;
+}
+
+.swal2-title,
+.swal2-html-container {
+    color: var(--health-text-main) !important;
+}
+
+.swal2-confirm {
+    background-color: var(--health-primary) !important;
+}
