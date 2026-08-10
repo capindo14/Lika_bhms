@@ -42,6 +42,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                                 <th>Gender</th>
                                 <th>Age</th>
                                 <th>Civil Status</th>
+                                <th>Spouse & Family</th>
                                 <th>Contact</th>
                                 <th>Household Role</th>
                                 <th class="text-center">Actions</th>
@@ -58,9 +59,35 @@ require_once LAYOUT_PATH . 'sidebar.php';
                                     <td>
                                         <?= gender_badge($res['gender']) ?>
                                     </td>
-                                    <td><?= escape($res['age']) ?> yrs</td>
-                                    <td><?= escape($res['civil_status']) ?></td>
-                                    <td><?= escape($res['contact_number'] ?: 'N/A') ?></td>
+                                     <td><?= escape($res['age']) ?> yrs</td>
+                                     <td><?= escape($res['civil_status']) ?></td>
+                                     <td>
+                                         <?php if (!empty($res['family_id'])): ?>
+                                             <div class="small" style="font-size: 0.75rem; line-height: 1.3;">
+                                                 <?php if (!empty($res['spouse_id'])): 
+                                                     $spouseColorClass = $res['spouse_gender'] === 'Male' ? 'text-gender-male' : ($res['spouse_gender'] === 'Female' ? 'text-gender-female' : 'text-success');
+                                                 ?>
+                                                     <a href="#" onclick="viewResidentProfile(<?= (int)$res['spouse_id'] ?>); return false;" class="text-decoration-none fw-semibold <?= $spouseColorClass ?> d-block"><?= escape($res['spouse_name']) ?></a>
+                                                 <?php elseif ($res['civil_status'] === 'Married'): ?>
+                                                     <span class="text-muted d-block">No spouse linked</span>
+                                                 <?php endif; ?>
+                                                 <a href="<?= url("index.php?route=family") ?>" class="text-decoration-none text-muted d-block"><?= escape($res['family_no']) ?></a>
+                                             </div>
+                                         <?php elseif (!empty($res['spouse_id'])): 
+                                             $spouseColorClass = $res['spouse_gender'] === 'Male' ? 'text-gender-male' : ($res['spouse_gender'] === 'Female' ? 'text-gender-female' : 'text-success');
+                                         ?>
+                                             <div class="small" style="font-size: 0.75rem; line-height: 1.3;">
+                                                 <a href="#" onclick="viewResidentProfile(<?= (int)$res['spouse_id'] ?>); return false;" class="text-decoration-none fw-semibold <?= $spouseColorClass ?> d-block"><?= escape($res['spouse_name']) ?></a>
+                                             </div>
+                                         <?php elseif ($res['civil_status'] === 'Married'): ?>
+                                             <div class="small" style="font-size: 0.75rem; line-height: 1.3;">
+                                                 <span class="text-muted d-block">No spouse linked</span>
+                                             </div>
+                                         <?php else: ?>
+                                             <span class="text-muted small">-</span>
+                                         <?php endif; ?>
+                                     </td>
+                                     <td><?= escape($res['contact_number'] ?: 'N/A') ?></td>
                                     <td>
                                         <?php if ($res['is_family_head']): ?>
                                             <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle">Family Head</span>
@@ -149,7 +176,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                         <label for="modal_birthdate" class="form-label fw-semibold small">Birthdate <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-light"><i class="bi bi-calendar-event"></i></span>
-                            <input type="text" class="form-control datepicker" id="modal_birthdate" name="birthdate" required placeholder="YYYY-MM-DD">
+                            <input type="text" class="form-control birthdate-picker" id="modal_birthdate" name="birthdate" required placeholder="YYYY-MM-DD">
                         </div>
                         <div class="invalid-feedback">Please enter a valid birthdate.</div>
                     </div>
@@ -248,6 +275,14 @@ require_once LAYOUT_PATH . 'sidebar.php';
                         <small class="text-muted d-block">Full Residential Address</small>
                         <div class="p-2 border rounded bg-light fw-medium text-dark" id="view-res-address">---</div>
                     </div>
+                    <div class="col-12" id="view-res-family-section" style="display:none;">
+                        <small class="text-muted d-block">Linked Family Profile</small>
+                        <div class="p-2 border border-success-subtle rounded bg-success bg-opacity-10 fw-medium text-success">
+                            <i class="bi bi-house-door-fill me-1"></i>
+                            <a href="#" id="view-res-family-link" class="text-success text-decoration-none fw-bold">---</a>
+                            <span class="text-muted small ms-1">(Relationship: <span id="view-res-family-rel" class="fw-semibold">---</span>)</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- History Nav Tabs -->
@@ -328,17 +363,17 @@ require_once LAYOUT_PATH . 'sidebar.php';
                             <option value="Female">Female</option>
                             <option value="Other">Other</option>
                         </select>
-                        <div class="invalid-feedback">Please select gender.</div>
+                        <div class="invalid-feedback">Please select a gender.</div>
                     </div>
 
                     <!-- Birthdate -->
                     <div class="col-12 col-md-4">
                         <label for="edit_birthdate" class="form-label fw-semibold small">Birthdate <span class="text-danger">*</span></label>
                         <div class="input-group">
-                            <span class="input-group-text bg-light"><i class="bi bi-calendar"></i></span>
-                            <input type="text" class="form-control datepicker" id="edit_birthdate" name="birthdate" required placeholder="YYYY-MM-DD">
+                            <span class="input-group-text bg-light"><i class="bi bi-calendar-event"></i></span>
+                            <input type="text" class="form-control birthdate-picker" id="edit_birthdate" name="birthdate" required placeholder="YYYY-MM-DD">
                         </div>
-                        <div class="invalid-feedback">Birthdate is required.</div>
+                        <div class="invalid-feedback">Please enter a valid birthdate.</div>
                     </div>
 
                     <!-- Civil Status -->
@@ -349,7 +384,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                             <option value="Single">Single</option>
                             <option value="Married">Married</option>
                             <option value="Widowed">Widowed</option>
-                            <option value="Separated">Separated</option>
+                            <option value="Divorced">Divorced</option>
                         </select>
                         <div class="invalid-feedback">Please select civil status.</div>
                     </div>
@@ -357,22 +392,32 @@ require_once LAYOUT_PATH . 'sidebar.php';
                     <!-- Contact Number -->
                     <div class="col-12 col-md-6">
                         <label for="edit_contact_number" class="form-label fw-semibold small">Contact Number</label>
-                        <input type="text" class="form-control" id="edit_contact_number" name="contact_number" placeholder="e.g. 09123456789">
+                        <input type="text" class="form-control" id="edit_contact_number" name="contact_number" placeholder="e.g. 09171234567" pattern="^(09|\+639)\d{9}$">
+                        <small class="text-muted d-block mt-1">Format: 11 digit mobile number starting with 09.</small>
+                        <div class="invalid-feedback">Please enter a valid Philippine mobile number.</div>
                     </div>
 
-                    <!-- Family Head Checkbox -->
-                    <div class="col-12 col-md-6 d-flex align-items-end">
-                        <div class="form-check form-switch mb-2">
-                            <input class="form-check-input" type="checkbox" role="switch" id="edit_is_family_head" name="is_family_head" value="1">
-                            <label class="form-check-label fw-semibold small" for="edit_is_family_head">Designate as Household Head</label>
-                        </div>
+                    <!-- Barangay -->
+                    <div class="col-12 col-md-6">
+                        <label for="edit_barangay" class="form-label fw-semibold small">Barangay Center Jurisdiction <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="edit_barangay" name="barangay" required placeholder="Enter Barangay Center">
+                        <div class="invalid-feedback">Please input Barangay.</div>
                     </div>
 
-                    <!-- Address -->
+                    <!-- Complete Address -->
                     <div class="col-12">
-                        <label for="edit_address" class="form-label fw-semibold small">House Address <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="edit_address" name="address" rows="2" required placeholder="Purok / Street / Block & Lot, Barangay Name"></textarea>
-                        <div class="invalid-feedback">House address is required.</div>
+                        <label for="edit_address" class="form-label fw-semibold small">Complete Address <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="edit_address" name="address" rows="2" required placeholder="Street name, block, lot, zone/sitio..."></textarea>
+                        <div class="invalid-feedback">Complete address is required.</div>
+                    </div>
+
+                    <!-- Family Head Designation -->
+                    <div class="col-12">
+                        <div class="form-check form-switch p-3 border rounded-3 bg-light bg-opacity-50">
+                            <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" id="edit_is_family_head" name="is_family_head" value="1">
+                            <label class="form-check-label fw-semibold small" for="edit_is_family_head">Designate as Family Head</label>
+                            <span class="d-block text-muted small mt-1">If active, this resident can be referenced as the family head when building Family Profiles.</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -387,23 +432,27 @@ require_once LAYOUT_PATH . 'sidebar.php';
 <?php require_once LAYOUT_PATH . 'footer.php'; ?>
 
 <script>
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    return text.toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 $(document).ready(function() {
     $('#residents-table').DataTable({
         responsive: true,
         order: [[1, 'asc']], // Sort by Name
         columnDefs: [
-            { orderable: false, targets: 7 } // Disable ordering on Actions column
+            { orderable: false, targets: [5, 8] } // Disable ordering on Spouse & Family and Actions columns
         ]
     });
 
     $('#editResidentModal').on('shown.bs.modal', function () {
-        if (typeof flatpickr !== 'undefined') {
-            flatpickr('#edit_birthdate', {
-                dateFormat: 'Y-m-d',
-                allowInput: true,
-                maxDate: 'today'
-            });
-        }
+        App.initBirthdatePicker('#edit_birthdate');
     });
 });
 
@@ -421,9 +470,30 @@ function viewResidentProfile(id) {
                 $('#view-res-code').text(r.resident_id);
                 $('#view-res-age').text(`${r.age} yrs`);
                 $('#view-res-birthdate').text(r.birthdate);
-                $('#view-res-civil').text(r.civil_status);
+                
+                // Civil Status with spouse details
+                let civilHtml = escapeHtml(r.civil_status);
+                if (r.spouse_id) {
+                    const spouseColorClass = r.spouse_gender === 'Male' ? 'text-gender-male' : (r.spouse_gender === 'Female' ? 'text-gender-female' : 'text-danger');
+                    civilHtml += ` <br><span class="small text-muted">Spouse: <a href="#" onclick="bootstrap.Modal.getInstance(document.getElementById('viewResidentModal')).hide(); setTimeout(() => viewResidentProfile(${parseInt(r.spouse_id)}), 400); return false;" class="text-decoration-none fw-semibold ${spouseColorClass}"><i class="bi bi-heart-fill text-danger me-1"></i>${escapeHtml(r.spouse_name)}</a></span>`;
+                } else if (r.civil_status === 'Married') {
+                    civilHtml += ` <br><span class="small text-muted"><i class="bi bi-heart-break text-warning me-1"></i>No spouse linked</span>`;
+                }
+                $('#view-res-civil').html(civilHtml);
+
                 $('#view-res-contact').text(r.contact_number || 'N/A');
                 $('#view-res-address').text(r.address);
+
+                // Family Profile link
+                if (r.family_id) {
+                    $('#view-res-family-link')
+                        .attr('href', `index.php?route=family`)
+                        .text(r.family_no);
+                    $('#view-res-family-rel').text(r.relationship_to_head || 'Member');
+                    $('#view-res-family-section').show();
+                } else {
+                    $('#view-res-family-section').hide();
+                }
 
                 // Badges
                 const gBadge = r.gender === 'Male' 
@@ -507,6 +577,7 @@ function editResidentProfile(id) {
                 $('#edit_birthdate').val(r.birthdate);
                 $('#edit_civil_status').val(r.civil_status);
                 $('#edit_contact_number').val(r.contact_number);
+                $('#edit_barangay').val(r.barangay);
                 $('#edit_address').val(r.address);
                 $('#edit_is_family_head').prop('checked', parseInt(r.is_family_head) === 1);
 
@@ -556,13 +627,7 @@ function confirmRestore(id, name) {
 
 // Re-initialize Flatpickr inside Register Modal when opened
 $('#registerResidentModal').on('shown.bs.modal', function () {
-    if (typeof flatpickr !== 'undefined') {
-        flatpickr('#modal_birthdate', {
-            dateFormat: 'Y-m-d',
-            allowInput: true,
-            maxDate: 'today'
-        });
-    }
+    App.initBirthdatePicker('#modal_birthdate');
 });
 
 // Bootstrap client-side validation for modal forms

@@ -6,6 +6,10 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+html {
+    font-size: 13.5px !important;
+}
+
 /* Isolated Stylesheet Root under the health-theme scope */
 :root {
     /* Color Palette */
@@ -62,8 +66,8 @@
     --health-shadow-hover: 0 20px 25px -5px rgba(15, 82, 186, 0.12), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 
     /* Structural sizing */
-    --health-sidebar-width: 280px;
-    --health-topbar-height: 70px;
+    --health-sidebar-width: 240px;
+    --health-topbar-height: 60px;
     --health-max-container: 100%;
     --health-border-radius: 12px;
     --health-transition-normal: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -323,8 +327,8 @@
 }
 
 .health-avatar {
-    width: 38px;
-    height: 38px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     background-color: var(--health-primary-light);
     color: var(--health-primary);
@@ -396,7 +400,7 @@
     border: 1px solid var(--health-border-color) !important;
     border-radius: var(--health-border-radius) !important;
     box-shadow: var(--health-shadow-sm) !important;
-    padding: 1.5rem;
+    padding: 1.25rem !important;
     transition: var(--health-transition-normal) !important;
     overflow: hidden;
 }
@@ -475,13 +479,13 @@
     font-size: 0.8rem !important;
     text-transform: uppercase !important;
     letter-spacing: 0.05em !important;
-    padding: 1rem 1.25rem !important;
+    padding: 0.85rem 1rem !important;
     border-bottom: 1px solid var(--health-border-color) !important;
     border-top: none !important;
 }
 
 .health-theme .table td {
-    padding: 0.95rem 1.25rem !important;
+    padding: 0.75rem 1rem !important;
     border-bottom: 1px solid var(--health-border-color) !important;
     color: var(--health-text-main) !important;
     font-size: 0.875rem !important;
@@ -546,6 +550,14 @@
     background-color: var(--health-gender-female-bg) !important;
     color: var(--health-gender-female) !important;
     border: 1px solid rgba(216, 27, 96, 0.25) !important;
+}
+
+.text-gender-male {
+    color: var(--health-gender-male) !important;
+}
+
+.text-gender-female {
+    color: var(--health-gender-female) !important;
 }
 
 .badge-gender-other {
@@ -663,4 +675,36 @@ textarea.form-control {
 
 .swal2-confirm {
     background-color: var(--health-primary) !important;
+}
+
+/* Loading Spinner Overlay Styling */
+.spinner-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 9999;
+}
+
+[data-bs-theme="dark"] .spinner-wrapper {
+    background-color: rgba(11, 15, 25, 0.6);
+}
+
+/* Custom styling for Flatpickr dropdowns (ensure readability in both light & dark themes) */
+.flatpickr-monthDropdown-months,
+.flatpickr-custom-year-select {
+    color: var(--health-text-main, inherit) !important;
+}
+
+.flatpickr-monthDropdown-months option,
+.flatpickr-custom-year-select option {
+    background-color: var(--health-card-bg, #ffffff) !important;
+    color: var(--health-text-main, #212529) !important;
 }

@@ -34,7 +34,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                             <select class="form-select" id="head_resident_id" name="head_resident_id" required>
                                 <option value="" disabled>Select Resident Head</option>
                                 <?php foreach ($residents as $res): ?>
-                                    <option value="<?= $res['id'] ?>" data-address="<?= escape($res['address']) ?>" <?= $res['id'] == $family['head_resident_id'] ? 'selected' : '' ?>>
+                                    <option value="<?= $res['id'] ?>" data-address="<?= escape($res['address']) ?>" data-gender="<?= escape($res['gender']) ?>" <?= $res['id'] == $family['head_resident_id'] ? 'selected' : '' ?>>
                                         <?= escape($res['last_name'] . ', ' . $res['first_name'] . ' (' . $res['resident_id'] . ')') ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -65,7 +65,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                             <input type="text" class="form-control" id="educational_attainment" name="educational_attainment" value="<?= escape($family['educational_attainment']) ?>" placeholder="e.g. High School Graduate">
                         </div>
                         <!-- Pregnancy Status -->
-                        <div class="col-12 col-md-4">
+                        <div class="col-12 col-md-4" id="pregnancy_status_container">
                             <label for="pregnancy_status" class="form-label fw-semibold small">Pregnancy Status</label>
                             <select class="form-select" id="pregnancy_status" name="pregnancy_status">
                                 <option value="N/A" <?= $family['pregnancy_status'] == 'N/A' ? 'selected' : '' ?>>N/A (Not Applicable)</option>
@@ -79,7 +79,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                             <input type="text" class="form-control" id="family_planning_status" name="family_planning_status" value="<?= escape($family['family_planning_status']) ?>" placeholder="e.g. Pill, Condom, None">
                         </div>
                         <!-- Child Feeding Type -->
-                        <div class="col-12 col-md-4">
+                        <div class="col-12 col-md-4" id="child_feeding_type_container">
                             <label for="child_feeding_type" class="form-label fw-semibold small">Child Feeding Type</label>
                             <input type="text" class="form-control" id="child_feeding_type" name="child_feeding_type" value="<?= escape($family['child_feeding_type']) ?>" placeholder="e.g. Breastfeeding, N/A">
                         </div>
@@ -201,6 +201,7 @@ $(document).ready(function() {
         if (address) {
             $('#address').val(address);
         }
+        toggleGenderIndicators($(this));
     });
 
     // Add Member Row Click
@@ -214,7 +215,27 @@ $(document).ready(function() {
     $(document).on('click', '.remove-row-btn', function() {
         $(this).closest('tr').remove();
     });
+
+    // Set initial field visibility based on current head selection
+    toggleGenderIndicators($('#head_resident_id'));
 });
+
+function toggleGenderIndicators(selectEl) {
+    const gender = selectEl.find(':selected').data('gender');
+    const pregnancyContainer = $('#pregnancy_status_container');
+    const feedingContainer = $('#child_feeding_type_container');
+    
+    if (gender === 'Male') {
+        pregnancyContainer.hide();
+        feedingContainer.hide();
+        // Reset inputs on hide
+        $('#pregnancy_status').val('N/A');
+        $('#child_feeding_type').val('');
+    } else {
+        pregnancyContainer.show();
+        feedingContainer.show();
+    }
+}
 
 // Bootstrap Form Validations
 (function () {

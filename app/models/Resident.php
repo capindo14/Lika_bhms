@@ -15,10 +15,78 @@ class Resident {
     public static function getAll(string $status = 'Active'): array {
         $db = Database::getConnection();
         $stmt = $db->prepare("
-            SELECT *, TIMESTAMPDIFF(YEAR, birthdate, CURDATE()) AS age 
-            FROM residents 
-            WHERE status = :status AND deleted_at IS NULL 
-            ORDER BY last_name, first_name
+            SELECT r.*, TIMESTAMPDIFF(YEAR, r.birthdate, CURDATE()) AS age,
+                   f.id AS family_id, f.family_no, fm.relationship_to_head,
+                   CASE 
+                       WHEN fm.relationship_to_head = 'Head' THEN (
+                           SELECT fm2.resident_id 
+                           FROM family_members fm2 
+                           WHERE fm2.family_id = fm.family_id 
+                             AND LOWER(fm2.relationship_to_head) IN ('spouse', 'husband', 'wife') 
+                           LIMIT 1
+                       )
+                       WHEN LOWER(fm.relationship_to_head) IN ('spouse', 'husband', 'wife') THEN f.head_resident_id
+                       ELSE NULL 
+                   END AS spouse_id,
+                   CASE 
+                       WHEN fm.relationship_to_head = 'Head' THEN (
+                           SELECT CONCAT(r2.last_name, ', ', r2.first_name, ' ', COALESCE(r2.middle_name, ''))
+                           FROM family_members fm2 
+                           JOIN residents r2 ON fm2.resident_id = r2.id
+                           WHERE fm2.family_id = fm.family_id 
+                             AND LOWER(fm2.relationship_to_head) IN ('spouse', 'husband', 'wife') 
+                             AND r2.deleted_at IS NULL
+                           LIMIT 1
+                       )
+                       WHEN LOWER(fm.relationship_to_head) IN ('spouse', 'husband', 'wife') THEN (
+                           SELECT CONCAT(r2.last_name, ', ', r2.first_name, ' ', COALESCE(r2.middle_name, ''))
+                           FROM residents r2 
+                           WHERE r2.id = f.head_resident_id 
+                             AND r2.deleted_at IS NULL
+                       )
+                       ELSE NULL 
+                   END AS spouse_name,
+                   CASE 
+                       WHEN fm.relationship_to_head = 'Head' THEN (
+                           SELECT r2.resident_id
+                           FROM family_members fm2 
+                           JOIN residents r2 ON fm2.resident_id = r2.id
+                           WHERE fm2.family_id = fm.family_id 
+                             AND LOWER(fm2.relationship_to_head) IN ('spouse', 'husband', 'wife') 
+                             AND r2.deleted_at IS NULL
+                           LIMIT 1
+                       )
+                       WHEN LOWER(fm.relationship_to_head) IN ('spouse', 'husband', 'wife') THEN (
+                           SELECT r2.resident_id
+                           FROM residents r2 
+                           WHERE r2.id = f.head_resident_id 
+                             AND r2.deleted_at IS NULL
+                       )
+                       ELSE NULL 
+                   END AS spouse_code,
+                   CASE 
+                        WHEN fm.relationship_to_head = 'Head' THEN (
+                            SELECT r2.gender
+                            FROM family_members fm2 
+                            JOIN residents r2 ON fm2.resident_id = r2.id
+                            WHERE fm2.family_id = fm.family_id 
+                              AND LOWER(fm2.relationship_to_head) IN ('spouse', 'husband', 'wife') 
+                              AND r2.deleted_at IS NULL
+                            LIMIT 1
+                        )
+                        WHEN LOWER(fm.relationship_to_head) IN ('spouse', 'husband', 'wife') THEN (
+                            SELECT r2.gender
+                            FROM residents r2 
+                            WHERE r2.id = f.head_resident_id 
+                              AND r2.deleted_at IS NULL
+                        )
+                        ELSE NULL 
+                    END AS spouse_gender
+            FROM residents r
+            LEFT JOIN family_members fm ON r.id = fm.resident_id
+            LEFT JOIN families f ON fm.family_id = f.id
+            WHERE r.status = :status AND r.deleted_at IS NULL 
+            ORDER BY r.last_name, r.first_name
         ");
         $stmt->execute([':status' => $status]);
         return $stmt->fetchAll();
@@ -33,9 +101,77 @@ class Resident {
     public static function getById(int $id): ?array {
         $db = Database::getConnection();
         $stmt = $db->prepare("
-            SELECT *, TIMESTAMPDIFF(YEAR, birthdate, CURDATE()) AS age 
-            FROM residents 
-            WHERE id = :id AND deleted_at IS NULL
+            SELECT r.*, TIMESTAMPDIFF(YEAR, r.birthdate, CURDATE()) AS age,
+                   f.id AS family_id, f.family_no, fm.relationship_to_head,
+                   CASE 
+                       WHEN fm.relationship_to_head = 'Head' THEN (
+                           SELECT fm2.resident_id 
+                           FROM family_members fm2 
+                           WHERE fm2.family_id = fm.family_id 
+                             AND LOWER(fm2.relationship_to_head) IN ('spouse', 'husband', 'wife') 
+                           LIMIT 1
+                       )
+                       WHEN LOWER(fm.relationship_to_head) IN ('spouse', 'husband', 'wife') THEN f.head_resident_id
+                       ELSE NULL 
+                   END AS spouse_id,
+                   CASE 
+                       WHEN fm.relationship_to_head = 'Head' THEN (
+                           SELECT CONCAT(r2.last_name, ', ', r2.first_name, ' ', COALESCE(r2.middle_name, ''))
+                           FROM family_members fm2 
+                           JOIN residents r2 ON fm2.resident_id = r2.id
+                           WHERE fm2.family_id = fm.family_id 
+                             AND LOWER(fm2.relationship_to_head) IN ('spouse', 'husband', 'wife') 
+                             AND r2.deleted_at IS NULL
+                           LIMIT 1
+                       )
+                       WHEN LOWER(fm.relationship_to_head) IN ('spouse', 'husband', 'wife') THEN (
+                           SELECT CONCAT(r2.last_name, ', ', r2.first_name, ' ', COALESCE(r2.middle_name, ''))
+                           FROM residents r2 
+                           WHERE r2.id = f.head_resident_id 
+                             AND r2.deleted_at IS NULL
+                       )
+                       ELSE NULL 
+                   END AS spouse_name,
+                   CASE 
+                       WHEN fm.relationship_to_head = 'Head' THEN (
+                           SELECT r2.resident_id
+                           FROM family_members fm2 
+                           JOIN residents r2 ON fm2.resident_id = r2.id
+                           WHERE fm2.family_id = fm.family_id 
+                             AND LOWER(fm2.relationship_to_head) IN ('spouse', 'husband', 'wife') 
+                             AND r2.deleted_at IS NULL
+                           LIMIT 1
+                       )
+                       WHEN LOWER(fm.relationship_to_head) IN ('spouse', 'husband', 'wife') THEN (
+                           SELECT r2.resident_id
+                           FROM residents r2 
+                           WHERE r2.id = f.head_resident_id 
+                             AND r2.deleted_at IS NULL
+                       )
+                       ELSE NULL 
+                   END AS spouse_code,
+                   CASE 
+                        WHEN fm.relationship_to_head = 'Head' THEN (
+                            SELECT r2.gender
+                            FROM family_members fm2 
+                            JOIN residents r2 ON fm2.resident_id = r2.id
+                            WHERE fm2.family_id = fm.family_id 
+                              AND LOWER(fm2.relationship_to_head) IN ('spouse', 'husband', 'wife') 
+                              AND r2.deleted_at IS NULL
+                            LIMIT 1
+                        )
+                        WHEN LOWER(fm.relationship_to_head) IN ('spouse', 'husband', 'wife') THEN (
+                            SELECT r2.gender
+                            FROM residents r2 
+                            WHERE r2.id = f.head_resident_id 
+                              AND r2.deleted_at IS NULL
+                        )
+                        ELSE NULL 
+                    END AS spouse_gender
+            FROM residents r
+            LEFT JOIN family_members fm ON r.id = fm.resident_id
+            LEFT JOIN families f ON fm.family_id = f.id
+            WHERE r.id = :id AND r.deleted_at IS NULL
         ");
         $stmt->execute([':id' => $id]);
         $res = $stmt->fetch();
@@ -232,10 +368,78 @@ class Resident {
     public static function getLatest(int $limit = 5): array {
         $db = Database::getConnection();
         $stmt = $db->prepare("
-            SELECT *, TIMESTAMPDIFF(YEAR, birthdate, CURDATE()) AS age 
-            FROM residents 
-            WHERE status = 'Active' AND deleted_at IS NULL 
-            ORDER BY created_at DESC 
+            SELECT r.*, TIMESTAMPDIFF(YEAR, r.birthdate, CURDATE()) AS age,
+                   f.id AS family_id, f.family_no, fm.relationship_to_head,
+                   CASE 
+                       WHEN fm.relationship_to_head = 'Head' THEN (
+                           SELECT fm2.resident_id 
+                           FROM family_members fm2 
+                           WHERE fm2.family_id = fm.family_id 
+                             AND LOWER(fm2.relationship_to_head) IN ('spouse', 'husband', 'wife') 
+                           LIMIT 1
+                       )
+                       WHEN LOWER(fm.relationship_to_head) IN ('spouse', 'husband', 'wife') THEN f.head_resident_id
+                       ELSE NULL 
+                   END AS spouse_id,
+                   CASE 
+                       WHEN fm.relationship_to_head = 'Head' THEN (
+                           SELECT CONCAT(r2.last_name, ', ', r2.first_name, ' ', COALESCE(r2.middle_name, ''))
+                           FROM family_members fm2 
+                           JOIN residents r2 ON fm2.resident_id = r2.id
+                           WHERE fm2.family_id = fm.family_id 
+                             AND LOWER(fm2.relationship_to_head) IN ('spouse', 'husband', 'wife') 
+                             AND r2.deleted_at IS NULL
+                           LIMIT 1
+                       )
+                       WHEN LOWER(fm.relationship_to_head) IN ('spouse', 'husband', 'wife') THEN (
+                           SELECT CONCAT(r2.last_name, ', ', r2.first_name, ' ', COALESCE(r2.middle_name, ''))
+                           FROM residents r2 
+                           WHERE r2.id = f.head_resident_id 
+                             AND r2.deleted_at IS NULL
+                       )
+                       ELSE NULL 
+                   END AS spouse_name,
+                   CASE 
+                       WHEN fm.relationship_to_head = 'Head' THEN (
+                           SELECT r2.resident_id
+                           FROM family_members fm2 
+                           JOIN residents r2 ON fm2.resident_id = r2.id
+                           WHERE fm2.family_id = fm.family_id 
+                             AND LOWER(fm2.relationship_to_head) IN ('spouse', 'husband', 'wife') 
+                             AND r2.deleted_at IS NULL
+                           LIMIT 1
+                       )
+                       WHEN LOWER(fm.relationship_to_head) IN ('spouse', 'husband', 'wife') THEN (
+                           SELECT r2.resident_id
+                           FROM residents r2 
+                           WHERE r2.id = f.head_resident_id 
+                             AND r2.deleted_at IS NULL
+                       )
+                       ELSE NULL 
+                   END AS spouse_code,
+                   CASE 
+                        WHEN fm.relationship_to_head = 'Head' THEN (
+                            SELECT r2.gender
+                            FROM family_members fm2 
+                            JOIN residents r2 ON fm2.resident_id = r2.id
+                            WHERE fm2.family_id = fm.family_id 
+                              AND LOWER(fm2.relationship_to_head) IN ('spouse', 'husband', 'wife') 
+                              AND r2.deleted_at IS NULL
+                            LIMIT 1
+                        )
+                        WHEN LOWER(fm.relationship_to_head) IN ('spouse', 'husband', 'wife') THEN (
+                            SELECT r2.gender
+                            FROM residents r2 
+                            WHERE r2.id = f.head_resident_id 
+                              AND r2.deleted_at IS NULL
+                        )
+                        ELSE NULL 
+                    END AS spouse_gender
+            FROM residents r
+            LEFT JOIN family_members fm ON r.id = fm.resident_id
+            LEFT JOIN families f ON fm.family_id = f.id
+            WHERE r.status = 'Active' AND r.deleted_at IS NULL 
+            ORDER BY r.created_at DESC 
             LIMIT :limit
         ");
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);

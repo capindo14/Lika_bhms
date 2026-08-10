@@ -1,0 +1,9 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Stop rewriting if the request is already in the public directory
+    RewriteRule ^public/ - [L]
+
+    # Rewrite all other requests to the public directory
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

@@ -70,7 +70,7 @@ $userRole = $currentUser['role'] ?? 'Staff';
 
     <div class="health-sidebar-footer">
         <!-- Sign Out -->
-        <a class="health-menu-item nav-link text-danger border border-danger border-opacity-10 bg-danger bg-opacity-10 justify-content-center text-center" href="<?= url('logout.php') ?>" onclick="return confirm('Are you sure you want to sign out?')">
+        <a id="logout-btn" class="health-menu-item nav-link text-danger border border-danger border-opacity-10 bg-danger bg-opacity-10 justify-content-center text-center" href="<?= url('logout.php') ?>">
             <i class="bi bi-box-arrow-left text-danger"></i>
             <span class="text-danger fw-semibold">Sign Out</span>
         </a>

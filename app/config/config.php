@@ -21,13 +21,16 @@ if (session_status() === PHP_SESSION_NONE) {
 define('APP_NAME', 'Barangay Health Monitoring System');
 define('APP_VERSION', '1.0.0');
 
+// Load Environment Variables
+require_once __DIR__ . '/Dotenv.php';
+\App\Config\Dotenv::load(__DIR__ . '/../../.env');
+
 // Database Connection Parameters
 define('DB_DRIVER', 'mysql'); // Options: 'mysql' or 'sqlite'
-define('DB_HOST', '127.0.0.1');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'barangay_health');
-define('DB_SQLITE_PATH', __DIR__ . '/../../database/barangay_health.sqlite');
+define('DB_HOST', getenv('DB_HOST') ?: '127.0.0.1');
+define('DB_USER', getenv('DB_USER') ?: 'root');
+define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
+define('DB_NAME', getenv('DB_NAME') ?: 'barangay_health');
 
 // Base URL Auto-Detection
 if (php_sapi_name() === 'cli') {
@@ -42,7 +45,7 @@ if (php_sapi_name() === 'cli') {
 
 
 // Layout Constants
-define('LAYOUT_PATH', __DIR__ . '/../../layouts/');
+define('LAYOUT_PATH', __DIR__ . '/../../views/layouts/');
 define('VIEW_PATH', __DIR__ . '/../../views/');
 
 // Session Security Configuration

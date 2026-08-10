@@ -31,7 +31,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
 
     <!-- Custom CSS -->
-    <link href="<?= url('public/css/style.css') ?>?v=<?= time() ?>" rel="stylesheet">
+    <link href="<?= url('css/style.css') ?>?v=<?= time() ?>" rel="stylesheet">
 
     <script>
         // Apply dark mode theme immediately to prevent flashing light background

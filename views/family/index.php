@@ -172,7 +172,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                             <option value="" selected disabled>Select Resident Head</option>
                             <?php if (!empty($residents)): ?>
                                 <?php foreach ($residents as $res): ?>
-                                    <option value="<?= $res['id'] ?>" data-address="<?= escape($res['address']) ?>">
+                                    <option value="<?= $res['id'] ?>" data-address="<?= escape($res['address']) ?>" data-gender="<?= escape($res['gender']) ?>">
                                         <?= escape($res['last_name'] . ', ' . $res['first_name'] . ' (' . $res['resident_id'] . ')') ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -204,7 +204,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                         <input type="text" class="form-control form-control-sm" id="modal_educational_attainment" name="educational_attainment" placeholder="e.g. High School Graduate">
                     </div>
                     <!-- Pregnancy Status -->
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-4" id="modal_pregnancy_status_container">
                         <label for="modal_pregnancy_status" class="form-label fw-semibold small">Pregnancy Status</label>
                         <select class="form-select form-select-sm" id="modal_pregnancy_status" name="pregnancy_status">
                             <option value="N/A" selected>N/A (Not Applicable)</option>
@@ -218,7 +218,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                         <input type="text" class="form-control form-control-sm" id="modal_family_planning_status" name="family_planning_status" placeholder="e.g. Pill, Condom, None">
                     </div>
                     <!-- Child Feeding Type -->
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-4" id="modal_child_feeding_type_container">
                         <label for="modal_child_feeding_type" class="form-label fw-semibold small">Child Feeding Type</label>
                         <input type="text" class="form-control form-control-sm" id="modal_child_feeding_type" name="child_feeding_type" placeholder="e.g. Breastfeeding, N/A">
                     </div>
@@ -324,7 +324,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                             <option value="" disabled>Select Resident Head</option>
                             <?php if (!empty($residents)): ?>
                                 <?php foreach ($residents as $res): ?>
-                                    <option value="<?= $res['id'] ?>" data-address="<?= escape($res['address']) ?>">
+                                    <option value="<?= $res['id'] ?>" data-address="<?= escape($res['address']) ?>" data-gender="<?= escape($res['gender']) ?>">
                                         <?= escape($res['last_name'] . ', ' . $res['first_name'] . ' (' . $res['resident_id'] . ')') ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -356,7 +356,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                         <input type="text" class="form-control form-control-sm" id="edit_modal_educational_attainment" name="educational_attainment" placeholder="e.g. High School Graduate">
                     </div>
                     <!-- Pregnancy Status -->
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-4" id="edit_modal_pregnancy_status_container">
                         <label for="edit_modal_pregnancy_status" class="form-label fw-semibold small">Pregnancy Status</label>
                         <select class="form-select form-select-sm" id="edit_modal_pregnancy_status" name="pregnancy_status">
                             <option value="N/A">N/A (Not Applicable)</option>
@@ -370,7 +370,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                         <input type="text" class="form-control form-control-sm" id="edit_modal_family_planning_status" name="family_planning_status" placeholder="e.g. Pill, Condom, None">
                     </div>
                     <!-- Child Feeding Type -->
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-4" id="edit_modal_child_feeding_type_container">
                         <label for="edit_modal_child_feeding_type" class="form-label fw-semibold small">Child Feeding Type</label>
                         <input type="text" class="form-control form-control-sm" id="edit_modal_child_feeding_type" name="child_feeding_type" placeholder="e.g. Breastfeeding, N/A">
                     </div>
@@ -488,6 +488,7 @@ $(document).ready(function() {
         if (address) {
             $('#modal_family_address').val(address);
         }
+        toggleGenderIndicators($(this), 'modal_');
     });
 
     // Auto-fill address on head selection in Edit Modal
@@ -496,6 +497,7 @@ $(document).ready(function() {
         if (address) {
             $('#edit_modal_family_address').val(address);
         }
+        toggleGenderIndicators($(this), 'edit_modal_');
     });
 
     // Add Member Row Click in Create Modal
@@ -527,8 +529,26 @@ $(document).ready(function() {
         if ($('#modal-members-tbody tr').length === 0) {
             $('#modal-add-member-btn').trigger('click');
         }
+        toggleGenderIndicators($('#modal_head_resident_id'), 'modal_');
     });
 });
+
+function toggleGenderIndicators(selectEl, prefix) {
+    const gender = selectEl.find(':selected').data('gender');
+    const pregnancyContainer = $(`#${prefix}pregnancy_status_container`);
+    const feedingContainer = $(`#${prefix}child_feeding_type_container`);
+    
+    if (gender === 'Male') {
+        pregnancyContainer.hide();
+        feedingContainer.hide();
+        // Reset inputs on hide
+        $(`#${prefix}pregnancy_status`).val('N/A');
+        $(`#${prefix}child_feeding_type`).val('');
+    } else {
+        pregnancyContainer.show();
+        feedingContainer.show();
+    }
+}
 
 function viewMembers(familyId, familyNo, headName) {
     const content = $('#members-data-' + familyId).html();
@@ -574,6 +594,9 @@ function editFamilyProfile(id) {
                         $('#edit-modal-members-tbody').append(clone);
                     }
                 });
+
+                // Apply gender specific indicators show/hide
+                toggleGenderIndicators($('#edit_modal_head_resident_id'), 'edit_modal_');
 
                 const modal = new bootstrap.Modal(document.getElementById('editFamilyModal'));
                 modal.show();

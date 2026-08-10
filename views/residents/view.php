@@ -81,12 +81,38 @@ require_once LAYOUT_PATH . 'sidebar.php';
                             </tr>
                             <tr class="border-bottom">
                                 <td class="text-muted py-2">Civil Status</td>
-                                <td class="fw-semibold text-end py-2"><?= escape($resident['civil_status']) ?></td>
+                                <td class="fw-semibold text-end py-2">
+                                    <div><?= escape($resident['civil_status']) ?></div>
+                                    <?php if (!empty($resident['spouse_id'])): 
+                                        $spouseColorClass = $resident['spouse_gender'] === 'Male' ? 'text-gender-male' : ($resident['spouse_gender'] === 'Female' ? 'text-gender-female' : 'text-danger');
+                                    ?>
+                                        <div class="small mt-1 fw-normal text-muted" style="font-size: 0.75rem;">
+                                            Spouse: <a href="<?= url("index.php?route=residents/view&id={$resident['spouse_id']}") ?>" class="text-decoration-none fw-semibold <?= $spouseColorClass ?>"><i class="bi bi-heart-fill text-danger me-1"></i><?= escape($resident['spouse_name']) ?></a>
+                                        </div>
+                                    <?php elseif ($resident['civil_status'] === 'Married'): ?>
+                                        <div class="small mt-1 fw-normal text-muted" style="font-size: 0.75rem;">
+                                            <i class="bi bi-heart-break text-warning me-1"></i>No spouse linked
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
                             </tr>
                             <tr class="border-bottom">
                                 <td class="text-muted py-2">Contact</td>
                                 <td class="fw-semibold text-end py-2"><?= escape($resident['contact_number'] ?: 'None') ?></td>
                             </tr>
+                            <?php if (!empty($resident['family_id'])): ?>
+                            <tr class="border-bottom">
+                                <td class="text-muted py-2">Family Profile</td>
+                                <td class="fw-semibold text-end py-2">
+                                    <a href="<?= url("index.php?route=family") ?>" class="text-decoration-none text-muted">
+                                        <i class="bi bi-house-door-fill me-1"></i><?= escape($resident['family_no']) ?>
+                                    </a>
+                                    <div class="small text-muted fw-normal" style="font-size: 0.75rem;">
+                                        Relationship: <?= escape($resident['relationship_to_head'] ?: 'Member') ?>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endif; ?>
                             <tr class="border-bottom">
                                 <td class="text-muted py-2">Center Area</td>
                                 <td class="fw-semibold text-end py-2"><?= escape($resident['barangay']) ?></td>

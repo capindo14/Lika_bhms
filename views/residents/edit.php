@@ -61,7 +61,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                             <label for="birthdate" class="form-label fw-semibold small">Birthdate <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light"><i class="bi bi-calendar-event"></i></span>
-                                <input type="text" class="form-control datepicker" id="birthdate" name="birthdate" value="<?= escape($resident['birthdate']) ?>" required>
+                                <input type="text" class="form-control birthdate-picker" id="birthdate" name="birthdate" value="<?= escape($resident['birthdate']) ?>" required>
                             </div>
                             <div class="invalid-feedback">Please enter a valid birthdate.</div>
                         </div>

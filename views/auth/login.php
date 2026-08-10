@@ -13,10 +13,10 @@
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Custom CSS -->
-    <link href="<?= url('public/css/style.css') ?>" rel="stylesheet">
+    <link href="<?= url('css/style.css') ?>" rel="stylesheet">
     <style>
         body.login-body {
-            background: linear-gradient(135deg, #e0f2fe 0%, #d1fae5 100%);
+            background: linear-gradient(135deg, #2222223b 0%, #0728ffd8 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;

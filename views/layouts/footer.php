@@ -24,7 +24,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
     <!-- Custom Main Application Script -->
-    <script src="<?= url('public/js/app.js') ?>"></script>
+    <script src="<?= url('js/app.js') ?>?v=<?= time() ?>"></script>
 
     <!-- Toast message flash renderer -->
     <script>
