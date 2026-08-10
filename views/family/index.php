@@ -168,7 +168,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                     <!-- Family Head Select -->
                     <div class="col-12 col-md-6">
                         <label for="modal_head_resident_id" class="form-label fw-semibold small">Designated Family Head <span class="text-danger">*</span></label>
-                        <select class="form-select" id="modal_head_resident_id" name="head_resident_id" required>
+                        <select class="form-select searchable-select" id="modal_head_resident_id" name="head_resident_id" required>
                             <option value="" selected disabled>Select Resident Head</option>
                             <?php if (!empty($residents)): ?>
                                 <?php foreach ($residents as $res): ?>
@@ -320,7 +320,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                     <!-- Family Head Select -->
                     <div class="col-12 col-md-6">
                         <label for="edit_modal_head_resident_id" class="form-label fw-semibold small">Designated Family Head <span class="text-danger">*</span></label>
-                        <select class="form-select" id="edit_modal_head_resident_id" name="head_resident_id" required>
+                        <select class="form-select searchable-select" id="edit_modal_head_resident_id" name="head_resident_id" required>
                             <option value="" disabled>Select Resident Head</option>
                             <?php if (!empty($residents)): ?>
                                 <?php foreach ($residents as $res): ?>

@@ -383,7 +383,7 @@ $(document).ready(function() {
                     <!-- Patient Resident Select -->
                     <div class="col-12 col-md-6">
                         <label for="modal_imm_resident_id" class="form-label fw-semibold small">Resident (Child/Patient) <span class="text-danger">*</span></label>
-                        <select class="form-select" id="modal_imm_resident_id" name="resident_id" required>
+                        <select class="form-select searchable-select" id="modal_imm_resident_id" name="resident_id" required>
                             <option value="" selected disabled>Select Patient</option>
                             <?php if (!empty($residents)): ?>
                                 <?php foreach ($residents as $res): ?>
@@ -481,7 +481,7 @@ $(document).ready(function() {
                     <!-- Patient Resident Select -->
                     <div class="col-12 col-md-6">
                         <label for="edit_imm_resident_id" class="form-label fw-semibold small">Resident (Child/Patient) <span class="text-danger">*</span></label>
-                        <select class="form-select" id="edit_imm_resident_id" name="resident_id" required>
+                        <select class="form-select searchable-select" id="edit_imm_resident_id" name="resident_id" required>
                             <option value="" disabled>Select Patient</option>
                             <?php if (!empty($residents)): ?>
                                 <?php foreach ($residents as $res): ?>

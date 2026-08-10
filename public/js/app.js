@@ -56,9 +56,9 @@ document.addEventListener('DOMContentLoaded', function () {
         function syncThemeIcon() {
             const currentTheme = document.documentElement.getAttribute('data-bs-theme');
             if (currentTheme === 'dark') {
-                themeIcon.className = 'bi bi-sun-fill text-warning';
-            } else {
                 themeIcon.className = 'bi bi-moon-fill';
+            } else {
+                themeIcon.className = 'bi bi-sun-fill';
             }
         }
         syncThemeIcon();
@@ -118,6 +118,22 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     }
+
+    // 6. Custom Searchable Select Autoloader
+    App.initSearchableSelect('.searchable-select');
+
+    // 7. Auto add printing classes to body based on page route for reports
+    window.addEventListener('beforeprint', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const route = urlParams.get('route') || '';
+        if (route.indexOf('reports') === 0 || route.indexOf('reports/') === 0) {
+            document.body.classList.add('printing-report');
+        }
+    });
+
+    window.addEventListener('afterprint', function() {
+        document.body.classList.remove('printing-report');
+    });
 });
 
 /**
@@ -134,6 +150,146 @@ const App = {
     hideLoader: function () {
         const loader = document.getElementById('app-spinner');
         if (loader) loader.classList.add('d-none');
+    },
+
+    // Initialize custom premium inline searchable select dropdown
+    initSearchableSelect: function (selector) {
+        $(selector).each(function() {
+            const $select = $(this);
+            if ($select.hasClass('searchable-select-initialized')) return;
+            $select.addClass('searchable-select-initialized');
+
+            const placeholder = $select.find('option:disabled:first').text() || 'Search and select...';
+            const isRequired = $select.prop('required');
+            const sizeClass = $select.hasClass('form-select-sm') ? 'form-control-sm' : '';
+            
+            const $wrapper = $('<div class="searchable-select-wrapper position-relative"></div>');
+            const $input = $(`<input type="text" class="form-control searchable-select-input ${sizeClass}" placeholder="${placeholder}" autocomplete="off">`);
+            const $clearBtn = $('<button type="button" class="btn position-absolute end-0 top-50 translate-middle-y border-0 bg-transparent text-muted searchable-select-clear" style="z-index: 5; display: none; padding: 0 10px;"><i class="bi bi-x-circle-fill"></i></button>');
+            const $chevron = $('<span class="position-absolute end-0 top-50 translate-middle-y me-3 text-muted pointer-events-none searchable-select-chevron"><i class="bi bi-chevron-down"></i></span>');
+            const $dropdown = $('<div class="dropdown-menu searchable-select-dropdown w-100 shadow" style="max-height: 250px; overflow-y: auto;"></div>');
+
+            $select.hide();
+            $select.after($wrapper);
+            $wrapper.append($input).append($clearBtn).append($chevron).append($dropdown);
+
+            function populateOptions(filterText = '') {
+                $dropdown.empty();
+                let matchCount = 0;
+                const normalizedFilter = filterText.toLowerCase().trim();
+
+                $select.find('option').each(function() {
+                    const $opt = $(this);
+                    if ($opt.is(':disabled') || !$opt.val()) return;
+
+                    const text = $opt.text().trim();
+                    if (normalizedFilter && !text.toLowerCase().includes(normalizedFilter)) {
+                        return;
+                    }
+
+                    matchCount++;
+                    const $item = $(`<a class="dropdown-item searchable-select-item text-truncate" href="#" data-value="${$opt.val()}"></a>`);
+                    $item.text(text);
+                    
+                    if ($select.val() === $opt.val()) {
+                        $item.addClass('active');
+                        $input.val(text);
+                        $clearBtn.show();
+                        $chevron.hide();
+                    }
+
+                    $dropdown.append($item);
+                });
+
+                if (matchCount === 0) {
+                    $dropdown.append('<div class="dropdown-item disabled text-muted">No results found</div>');
+                }
+            }
+
+            populateOptions();
+
+            $input.on('focus click', function(e) {
+                e.stopPropagation();
+                populateOptions($input.val());
+                $('.searchable-select-dropdown').not($dropdown).removeClass('show');
+                $dropdown.addClass('show');
+            });
+
+            $input.on('input', function() {
+                populateOptions($input.val());
+                $dropdown.addClass('show');
+                if ($input.val().trim() !== '') {
+                    $clearBtn.show();
+                    $chevron.hide();
+                } else {
+                    $clearBtn.hide();
+                    $chevron.show();
+                    $select.val('').trigger('change');
+                }
+            });
+
+            $clearBtn.on('click', function(e) {
+                e.stopPropagation();
+                $input.val('');
+                $select.val('').trigger('change');
+                $clearBtn.hide();
+                $chevron.show();
+                populateOptions();
+                $dropdown.removeClass('show');
+            });
+
+            $dropdown.on('click', '.searchable-select-item', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const val = $(this).data('value');
+                const text = $(this).text();
+
+                $select.val(val).trigger('change');
+                $input.val(text);
+                
+                $clearBtn.show();
+                $chevron.hide();
+                $dropdown.removeClass('show');
+                $input.removeClass('is-invalid');
+            });
+
+            $(document).on('click', function(e) {
+                if (!$wrapper.is(e.target) && $wrapper.has(e.target).length === 0) {
+                    $dropdown.removeClass('show');
+                    const selectedOpt = $select.find(':selected');
+                    if (selectedOpt.val()) {
+                        $input.val(selectedOpt.text().trim());
+                    } else {
+                        $input.val('');
+                        $clearBtn.hide();
+                        $chevron.show();
+                    }
+                }
+            });
+
+            $select.on('change', function() {
+                const selectedOpt = $select.find(':selected');
+                if (selectedOpt.val()) {
+                    $input.val(selectedOpt.text().trim());
+                    $clearBtn.show();
+                    $chevron.hide();
+                } else {
+                    $input.val('');
+                    $clearBtn.hide();
+                    $chevron.show();
+                }
+            });
+
+            const form = $select.closest('form');
+            if (form.length) {
+                form.on('submit', function() {
+                    if (isRequired && !$select.val()) {
+                        $input.addClass('is-invalid');
+                    }
+                });
+            }
+        });
     },
 
     // Initialize Birthdate Picker with a Year Dropdown selector

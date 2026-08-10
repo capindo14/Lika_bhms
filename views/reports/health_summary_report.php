@@ -11,19 +11,19 @@ require_once LAYOUT_PATH . 'sidebar.php';
         <!-- Header -->
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
             <div>
-                <a href="<?= url('index.php?route=reports') ?>" class="text-decoration-none small text-muted d-inline-block mb-1">
-                    <i class="bi bi-arrow-left me-1"></i> Back to Reports Center
+                <a href="<?= url('index.php?route=reports') ?>" class="btn btn-sm btn-outline-primary px-3 py-1 mb-2 rounded-pill d-inline-flex align-items-center gap-1">
+                    <i class="bi bi-arrow-left"></i> Reports Center
                 </a>
                 <h3 class="fw-bold mb-1 text-dark"><?= escape($pageTitle) ?></h3>
                 <p class="text-muted small mb-0">Overview of key healthcare indicators, consultations, immunizations, and medicine allocations.</p>
             </div>
             
             <div class="d-flex gap-2 d-print-none">
-                <button onclick="window.print()" class="btn btn-outline-secondary btn-sm rounded-2">
-                    <i class="bi bi-printer me-1"></i> Print Report
+                <button onclick="window.print()" class="btn btn-outline-secondary">
+                    <i class="bi bi-printer-fill me-1"></i> Print Report
                 </button>
-                <a href="<?= url('index.php?route=reports/health_summary&export=csv' . ($filters['start_date'] ? '&start_date=' . $filters['start_date'] : '') . ($filters['end_date'] ? '&end_date=' . $filters['end_date'] : '')) ?>" class="btn btn-outline-success btn-sm rounded-2">
-                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV
+                <a href="<?= url('index.php?route=reports/health_summary&export=csv' . ($filters['start_date'] ? '&start_date=' . $filters['start_date'] : '') . ($filters['end_date'] ? '&end_date=' . $filters['end_date'] : '')) ?>" class="btn btn-success">
+                    <i class="bi bi-file-earmark-excel-fill me-1"></i> Export Excel/CSV
                 </a>
             </div>
         </div>

@@ -31,7 +31,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                         <!-- Family Head Select -->
                         <div class="col-12 col-md-6">
                             <label for="head_resident_id" class="form-label fw-semibold small">Designated Family Head <span class="text-danger">*</span></label>
-                            <select class="form-select" id="head_resident_id" name="head_resident_id" required>
+                            <select class="form-select searchable-select" id="head_resident_id" name="head_resident_id" required>
                                 <option value="" disabled>Select Resident Head</option>
                                 <?php foreach ($residents as $res): ?>
                                     <option value="<?= $res['id'] ?>" data-address="<?= escape($res['address']) ?>" data-gender="<?= escape($res['gender']) ?>" <?= $res['id'] == $family['head_resident_id'] ? 'selected' : '' ?>>

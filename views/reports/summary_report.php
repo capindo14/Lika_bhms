@@ -93,7 +93,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                         <h6 class="fw-bold text-dark mb-1 small">Consultation Records</h6>
                         <p class="text-muted mb-3" style="font-size: 0.78rem; line-height: 1.3;">Analyze diagnostic records, treatment trends, and checkups over specified date ranges.</p>
                     </div>
-                    <a href="<?= url('index.php?route=reports/consultations') ?>" class="btn btn-outline-info w-100 btn-sm rounded-2 py-1.5 fw-medium">Generate Report</a>
+                    <a href="<?= url('index.php?route=reports/consultations') ?>" class="btn btn-outline-primary w-100 btn-sm rounded-2 py-1.5 fw-medium">Generate Report</a>
                 </div>
             </div>
 
@@ -105,7 +105,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                         <h6 class="fw-bold text-dark mb-1 small">Immunization Logs</h6>
                         <p class="text-muted mb-3" style="font-size: 0.78rem; line-height: 1.3;">Track pediatric schedules, completed vaccines, and missed appointments.</p>
                     </div>
-                    <a href="<?= url('index.php?route=reports/immunizations') ?>" class="btn btn-outline-warning w-100 btn-sm rounded-2 py-1.5 fw-medium">Generate Report</a>
+                    <a href="<?= url('index.php?route=reports/immunizations') ?>" class="btn btn-outline-primary w-100 btn-sm rounded-2 py-1.5 fw-medium">Generate Report</a>
                 </div>
             </div>
 
@@ -117,7 +117,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                         <h6 class="fw-bold text-dark mb-1 small">Medicine Allocations</h6>
                         <p class="text-muted mb-3" style="font-size: 0.78rem; line-height: 1.3;">Monitor distributed stock items, tracking quantities given to individual patients.</p>
                     </div>
-                    <a href="<?= url('index.php?route=reports/medicine') ?>" class="btn btn-outline-success w-100 btn-sm rounded-2 py-1.5 fw-medium">Generate Report</a>
+                    <a href="<?= url('index.php?route=reports/medicine') ?>" class="btn btn-outline-primary w-100 btn-sm rounded-2 py-1.5 fw-medium">Generate Report</a>
                 </div>
             </div>
 

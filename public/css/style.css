@@ -708,3 +708,305 @@ textarea.form-control {
     background-color: var(--health-card-bg, #ffffff) !important;
     color: var(--health-text-main, #212529) !important;
 }
+
+/* Custom Theme Toggle Switch (Pill Style) */
+.theme-toggle-btn {
+    position: relative;
+    width: 54px;
+    height: 28px;
+    border-radius: 50px;
+    background-color: #e9ecef;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.15);
+    transition: background-color 0.3s ease;
+}
+
+[data-bs-theme="dark"] .theme-toggle-btn {
+    background-color: #343a40;
+}
+
+.theme-toggle-thumb {
+    position: absolute;
+    left: 3px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+[data-bs-theme="dark"] .theme-toggle-thumb {
+    transform: translateX(26px);
+    background-color: #212529;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.theme-toggle-thumb i {
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s ease;
+}
+
+.theme-toggle-thumb .bi-sun-fill {
+    color: #f1c40f; /* Yellow Sun */
+}
+
+.theme-toggle-thumb .bi-moon-fill {
+    color: #f8f9fa; /* White Moon */
+}
+
+.theme-toggle-btn:focus-visible {
+    outline: 2px solid var(--health-primary, #0F52BA);
+    outline-offset: 2px;
+}
+
+/* Fix DataTables length select dropdown alignment and text clipping/overlap */
+div.dataTables_length select.form-select,
+.dataTables_length select {
+    padding-right: 2rem !important;
+    min-width: 75px !important;
+    width: auto !important;
+    background-position: right 0.75rem center !important;
+    display: inline-block !important;
+}
+
+/* Fix DataTables sort icons overlapping column headers */
+table.dataTable thead th.sorting,
+table.dataTable thead th.sorting_asc,
+table.dataTable thead th.sorting_desc,
+table.dataTable thead td.sorting,
+table.dataTable thead td.sorting_asc,
+table.dataTable thead td.sorting_desc {
+    padding-right: 1.85rem !important;
+}
+
+/* Custom Searchable Select Styling */
+.searchable-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.searchable-select-input {
+    padding-right: 2.25rem !important;
+    cursor: text;
+}
+
+.searchable-select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1060; /* Above modals */
+    display: none;
+    float: left;
+    min-width: 10rem;
+    padding: 0.5rem 0;
+    margin: 0.125rem 0 0;
+    font-size: 13.5px;
+    color: var(--health-text-main, #212529);
+    text-align: left;
+    list-style: none;
+    background-color: var(--health-card-bg, #ffffff);
+    background-clip: padding-box;
+    border: 1px solid var(--health-border-color, rgba(0, 0, 0, 0.15));
+    border-radius: var(--health-border-radius, 0.375rem);
+}
+
+.searchable-select-dropdown.show {
+    display: block;
+}
+
+/* Custom scrollbar for searchable select dropdown */
+.searchable-select-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+.searchable-select-dropdown::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.searchable-select-dropdown::-webkit-scrollbar-thumb {
+    background-color: var(--health-border-color, #e2e8f0);
+    border-radius: 3px;
+}
+
+.searchable-select-dropdown .dropdown-item {
+    font-size: 13px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    color: var(--health-text-main);
+}
+
+.searchable-select-dropdown .dropdown-item:hover,
+.searchable-select-dropdown .dropdown-item:focus {
+    background-color: var(--health-primary-light, rgba(15, 82, 186, 0.08));
+    color: var(--health-primary, #0F52BA);
+}
+
+.searchable-select-dropdown .dropdown-item.active {
+    background-color: var(--health-primary, #0F52BA) !important;
+    color: #ffffff !important;
+}
+
+.searchable-select-clear {
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.searchable-select-clear:hover {
+    color: var(--health-danger, #dc3545) !important;
+}
+
+.searchable-select-chevron {
+    font-size: 11px;
+}
+
+/* Global Report Printing Styles */
+@page {
+    size: landscape;
+    margin: 0;
+}
+
+body.printing-report {
+    padding: 1.6cm !important;
+    background-color: #ffffff !important;
+    font-size: 12pt !important;
+    line-height: 1.5 !important;
+    color: #000000 !important;
+}
+
+@media print {
+    /* Unify page text colors and font sizes to 12pt black */
+    body.printing-report,
+    body.printing-report h1,
+    body.printing-report h2,
+    body.printing-report h3,
+    body.printing-report h4,
+    body.printing-report h5,
+    body.printing-report h6,
+    body.printing-report p,
+    body.printing-report span,
+    body.printing-report th,
+    body.printing-report td,
+    body.printing-report small,
+    body.printing-report i,
+    body.printing-report a,
+    body.printing-report div,
+    body.printing-report .badge {
+        color: #000000 !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+    
+    body.printing-report h4 {
+        font-size: 16pt !important;
+        font-weight: bold !important;
+    }
+
+    body.printing-report h5 {
+        font-size: 14pt !important;
+        font-weight: bold !important;
+    }
+
+    /* Table styling for premium clean reports */
+    body.printing-report table.table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin-top: 15px !important;
+        margin-bottom: 20px !important;
+        table-layout: auto !important;
+        word-wrap: break-word !important;
+    }
+    
+    body.printing-report table.table th,
+    body.printing-report table.table td {
+        font-size: 11pt !important; /* Balanced size so wide tables fit clean on width */
+        padding: 8px 10px !important;
+        border: 1px solid #cbd5e1 !important;
+        text-align: left !important;
+        vertical-align: top !important; /* Standard print alignment */
+        word-break: break-word !important;
+    }
+    
+    body.printing-report table.table th {
+        font-weight: bold !important;
+        background-color: #f1f5f9 !important;
+        color: #000000 !important;
+    }
+
+    /* Deep table color and border override to override Bootstrap specific variables */
+    body.printing-report table.table,
+    body.printing-report table.table * {
+        color: #000000 !important;
+        border-color: #cbd5e1 !important;
+    }
+
+    /* Prevent horizontal scrollbars in printed responsive tables */
+    body.printing-report .table-responsive {
+        overflow-x: visible !important;
+        overflow: visible !important;
+    }
+
+    /* Prevent truncating text in printed reports so full details display */
+    body.printing-report .text-truncate {
+        overflow: visible !important;
+        text-overflow: clip !important;
+        white-space: normal !important;
+        max-width: none !important;
+    }
+
+    /* Standard cell div spacing gap */
+    body.printing-report td div {
+        margin-bottom: 4px !important;
+    }
+    
+    body.printing-report .badge {
+        background-color: transparent !important;
+        border: 1px solid #000000 !important;
+        color: #000000 !important;
+        font-weight: bold !important;
+        padding: 2px 6px !important;
+        border-radius: 4px !important;
+        display: inline-block !important;
+        vertical-align: middle !important;
+        line-height: 1.2 !important;
+        white-space: nowrap !important;
+    }
+    
+    /* Layout positioning */
+    body.printing-report .sidebar-wrapper,
+    body.printing-report .navbar-top,
+    body.printing-report .navbar,
+    body.printing-report .no-print,
+    body.printing-report .btn,
+    body.printing-report form,
+    body.printing-report footer,
+    body.printing-report .d-print-none,
+    body.printing-report .dataTables_length,
+    body.printing-report .dataTables_filter,
+    body.printing-report .dataTables_info,
+    body.printing-report .dataTables_paginate {
+        display: none !important;
+    }
+    
+    body.printing-report .main-content-wrapper {
+        margin-left: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+    
+    body.printing-report .card {
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+    }
+}

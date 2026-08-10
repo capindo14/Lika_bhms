@@ -170,20 +170,97 @@ require_once LAYOUT_PATH . 'sidebar.php';
 </div>
 
 <style>
+#print-section {
+    display: none;
+}
+
+@page {
+    margin: 0;
+}
+
+body.printing-consultation {
+    padding: 1.6cm !important;
+    background-color: #ffffff !important;
+}
+
 @media print {
-    body * {
-        visibility: hidden;
+    /* Hide all page content except the print section */
+    body.printing-consultation > *:not(#print-section) {
+        display: none !important;
     }
-    #consultationPrintArea, #consultationPrintArea * {
-        visibility: visible;
+    
+    body.printing-consultation #print-section {
+        display: block !important;
+        position: relative !important;
+        width: 100% !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-family: 'Inter', sans-serif !important;
+        padding: 0 !important;
+        font-size: 13pt !important;
+        line-height: 1.5 !important;
     }
-    #consultationPrintArea {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        border: none !important;
-        background: white !important;
+    
+    /* Make headers large and bold */
+    body.printing-consultation #print-section h5 {
+        font-size: 18pt !important;
+        font-weight: bold !important;
+        color: #000000 !important;
+    }
+    
+    body.printing-consultation #print-section .text-primary {
+        color: #000000 !important;
+        font-weight: bold !important;
+    }
+    
+    /* Force visibility of the print header inside the clone */
+    body.printing-consultation #print-section .d-print-block {
+        display: block !important;
+    }
+    
+    /* Make labels dark and clear instead of faded gray */
+    body.printing-consultation #print-section .text-muted {
+        color: #333333 !important;
+        font-weight: 600 !important;
+        font-size: 10.5pt !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        margin-bottom: 2px !important;
+    }
+    
+    /* Ensure clean contrast styling on detail boxes (increase text size & color intensity) */
+    body.printing-consultation #print-section .bg-light {
+        background-color: #f8f9fa !important;
+        border: 1.5px solid #bdc3c7 !important;
+        color: #000000 !important;
+        padding: 12px 15px !important;
+        border-radius: 6px !important;
+        margin-top: 4px !important;
+        margin-bottom: 18px !important;
+        font-size: 12.5pt !important;
+    }
+
+    body.printing-consultation #print-section .bg-success-subtle,
+    body.printing-consultation #print-section .bg-opacity-10 {
+        background-color: #f4faf4 !important;
+        border: 1.5px solid #a3d9a5 !important;
+        color: #1e5a22 !important;
+        padding: 12px 15px !important;
+        border-radius: 6px !important;
+        margin-top: 4px !important;
+        margin-bottom: 18px !important;
+        font-size: 12.5pt !important;
+    }
+    
+    body.printing-consultation #print-section hr {
+        border-top: 1.5px solid #bdc3c7 !important;
+        margin: 22px 0 !important;
+        opacity: 1 !important;
+    }
+    
+    body.printing-consultation #print-section span,
+    body.printing-consultation #print-section div {
+        color: #000000 !important;
     }
 }
 </style>
@@ -205,7 +282,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                     <!-- Patient Select -->
                     <div class="col-12 col-md-6">
                         <label for="modal_con_resident_id" class="form-label fw-semibold small">Patient (Resident) <span class="text-danger">*</span></label>
-                        <select class="form-select" id="modal_con_resident_id" name="resident_id" required>
+                        <select class="form-select searchable-select" id="modal_con_resident_id" name="resident_id" required>
                             <option value="" selected disabled>Select Patient</option>
                             <?php if (!empty($residents)): ?>
                                 <?php foreach ($residents as $res): ?>
@@ -313,7 +390,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                     <!-- Patient Select -->
                     <div class="col-12 col-md-6">
                         <label for="edit_con_resident_id" class="form-label fw-semibold small">Patient (Resident) <span class="text-danger">*</span></label>
-                        <select class="form-select" id="edit_con_resident_id" name="resident_id" required>
+                        <select class="form-select searchable-select" id="edit_con_resident_id" name="resident_id" required>
                             <option value="" disabled>Select Patient</option>
                             <?php if (!empty($residents)): ?>
                                 <?php foreach ($residents as $res): ?>
@@ -539,7 +616,29 @@ function editConsultation(id) {
 }
 
 function printConsultation() {
+    const printArea = document.getElementById('consultationPrintArea');
+    if (!printArea) return;
+
+    // Clone the print area node
+    const clone = printArea.cloneNode(true);
+    
+    // Create temporary print container
+    const printSection = document.createElement('div');
+    printSection.id = 'print-section';
+    printSection.appendChild(clone);
+    
+    // Append print container directly to body
+    document.body.appendChild(printSection);
+    
+    // Set class to body to trigger print CSS
+    document.body.classList.add('printing-consultation');
+    
+    // Open print preview dialog
     window.print();
+    
+    // Clean up temporary elements and restore page view state
+    document.body.removeChild(printSection);
+    document.body.classList.remove('printing-consultation');
 }
 
 function confirmDelete(id, code) {

@@ -20,7 +20,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
         <!-- Header -->
         <div class="d-flex align-items-center justify-content-between mb-4 no-print">
             <div>
-                <a href="<?= url('index.php?route=reports') ?>" class="text-decoration-none small">
+                <a href="<?= url('index.php?route=reports') ?>" class="btn btn-sm btn-outline-primary px-3 py-1 mb-2 rounded-pill d-inline-flex align-items-center gap-1">
                     <i class="bi bi-arrow-left"></i> Reports Center
                 </a>
                 <h3 class="fw-bold mt-2 mb-1"><?= escape($pageTitle) ?></h3>

@@ -22,8 +22,10 @@ $currentUser = get_logged_in_user();
         <div class="health-topbar-right">
             
             <!-- Dark Mode Toggle Button -->
-            <button class="btn btn-outline-secondary border-0 btn-sm rounded-circle px-2" id="theme-toggle-btn" title="Toggle Theme">
-                <i class="bi bi-moon-fill" id="theme-icon"></i>
+            <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle Theme">
+                <span class="theme-toggle-thumb">
+                    <i class="bi bi-moon-fill" id="theme-icon"></i>
+                </span>
             </button>
             
             <!-- User Profile Badge -->

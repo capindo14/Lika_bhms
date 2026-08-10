@@ -134,6 +134,9 @@ class ImmunizationController {
 
         $validator = new ValidationService();
         $data = sanitize_array($_POST);
+        
+        // Footprint
+        $data['user_id'] = $_SESSION['user_id'];
 
         $rules = [
             'resident_id' => 'required|numeric',

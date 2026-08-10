@@ -27,7 +27,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                         <!-- Patient Resident Select -->
                         <div class="col-12 col-md-6">
                             <label for="resident_id" class="form-label fw-semibold small">Resident (Child/Patient) <span class="text-danger">*</span></label>
-                            <select class="form-select" id="resident_id" name="resident_id" required>
+                            <select class="form-select searchable-select" id="resident_id" name="resident_id" required>
                                 <option value="" selected disabled>Select Patient</option>
                                 <?php foreach ($residents as $res): ?>
                                     <option value="<?= $res['id'] ?>">
