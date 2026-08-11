@@ -132,13 +132,13 @@ html {
     letter-spacing: -0.025em;
 }
 
-.health-theme a {
+.health-theme a:not(.btn) {
     color: var(--health-primary);
     text-decoration: none;
     transition: var(--health-transition-fast);
 }
 
-.health-theme a:hover {
+.health-theme a:not(.btn):hover {
     color: var(--health-primary-hover);
 }
 
@@ -872,20 +872,21 @@ table.dataTable thead td.sorting_desc {
 
 /* Global Report Printing Styles */
 @page {
-    size: landscape;
-    margin: 0;
+    size: A4 portrait;
+    margin: 0; /* Hides default browser print headers and footers */
 }
 
 body.printing-report {
-    padding: 1.6cm !important;
+    padding: 1.2cm !important; /* Acts as the print margin to prevent text clipping */
     background-color: #ffffff !important;
-    font-size: 12pt !important;
-    line-height: 1.5 !important;
+    font-size: 8pt !important;
+    line-height: 1.4 !important;
     color: #000000 !important;
+    font-family: Arial, sans-serif !important;
 }
 
 @media print {
-    /* Unify page text colors and font sizes to 12pt black */
+    /* Unify page text colors and font sizes to 8pt Arial black */
     body.printing-report,
     body.printing-report h1,
     body.printing-report h2,
@@ -903,50 +904,59 @@ body.printing-report {
     body.printing-report div,
     body.printing-report .badge {
         color: #000000 !important;
-        font-family: 'Inter', sans-serif !important;
+        font-family: Arial, sans-serif !important;
+        font-size: 8pt !important;
     }
     
     body.printing-report h4 {
-        font-size: 16pt !important;
+        font-size: 11pt !important;
         font-weight: bold !important;
+        margin-bottom: 2px !important;
     }
 
     body.printing-report h5 {
-        font-size: 14pt !important;
+        font-size: 9pt !important;
         font-weight: bold !important;
+        margin-bottom: 2px !important;
     }
 
-    /* Table styling for premium clean reports */
+    /* Table styling for simple, clean, readable reports without heavy borders */
     body.printing-report table.table {
         width: 100% !important;
         border-collapse: collapse !important;
-        margin-top: 15px !important;
-        margin-bottom: 20px !important;
+        margin-top: 10px !important;
+        margin-bottom: 15px !important;
         table-layout: auto !important;
         word-wrap: break-word !important;
+        border: none !important;
     }
     
     body.printing-report table.table th,
     body.printing-report table.table td {
-        font-size: 11pt !important; /* Balanced size so wide tables fit clean on width */
-        padding: 8px 10px !important;
-        border: 1px solid #cbd5e1 !important;
+        font-size: 8pt !important;
+        padding: 6px 8px !important;
+        border: none !important;
+        border-bottom: 1px solid #e2e8f0 !important; /* Clean light horizontal line */
         text-align: left !important;
-        vertical-align: top !important; /* Standard print alignment */
-        word-break: break-word !important;
+        vertical-align: top !important;
+        word-break: normal !important;
+        overflow-wrap: break-word !important;
+        word-wrap: break-word !important;
     }
     
     body.printing-report table.table th {
         font-weight: bold !important;
-        background-color: #f1f5f9 !important;
+        background-color: transparent !important;
         color: #000000 !important;
+        border-bottom: 2px solid #475569 !important; /* Slightly darker header line */
     }
 
-    /* Deep table color and border override to override Bootstrap specific variables */
+    /* Override any nested borders/backgrounds */
     body.printing-report table.table,
     body.printing-report table.table * {
         color: #000000 !important;
-        border-color: #cbd5e1 !important;
+        border-color: #e2e8f0 !important;
+        background-color: transparent !important;
     }
 
     /* Prevent horizontal scrollbars in printed responsive tables */
@@ -973,40 +983,112 @@ body.printing-report {
         border: 1px solid #000000 !important;
         color: #000000 !important;
         font-weight: bold !important;
-        padding: 2px 6px !important;
-        border-radius: 4px !important;
+        padding: 1px 4px !important;
+        border-radius: 2px !important;
         display: inline-block !important;
         vertical-align: middle !important;
-        line-height: 1.2 !important;
+        line-height: 1.1 !important;
         white-space: nowrap !important;
+        font-size: 7.5pt !important;
     }
     
     /* Layout positioning */
-    body.printing-report .sidebar-wrapper,
-    body.printing-report .navbar-top,
-    body.printing-report .navbar,
-    body.printing-report .no-print,
-    body.printing-report .btn,
-    body.printing-report form,
-    body.printing-report footer,
-    body.printing-report .d-print-none,
-    body.printing-report .dataTables_length,
-    body.printing-report .dataTables_filter,
-    body.printing-report .dataTables_info,
-    body.printing-report .dataTables_paginate {
+    .sidebar-wrapper,
+    .navbar-top,
+    .navbar,
+    nav,
+    .no-print,
+    .btn,
+    button,
+    form,
+    footer,
+    .d-print-none,
+    .dataTables_length,
+    .dataTables_filter,
+    .dataTables_info,
+    .dataTables_paginate {
         display: none !important;
     }
     
-    body.printing-report .main-content-wrapper {
-        margin-left: 0 !important;
-        padding: 0 !important;
+    html, 
+    body, 
+    .health-theme,
+    .health-layout-container,
+    .main-content-wrapper, 
+    .container-fluid, 
+    .container {
         width: 100% !important;
+        max-width: 100% !important;
+        min-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        position: static !important;
+        display: block !important;
+        min-height: auto !important;
+        height: auto !important;
     }
     
-    body.printing-report .card {
+    .health-theme .card,
+    .health-theme .card-body,
+    .health-theme .table-responsive,
+    .card,
+    .card-body,
+    .table-responsive,
+    table.table {
         border: none !important;
         box-shadow: none !important;
         background: transparent !important;
         padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+    }
+
+    /* Prevent page break inside table rows only */
+    tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    /* Remove conflicting position: absolute or float properties */
+    .main-content-wrapper,
+    .main-content-wrapper *,
+    .card,
+    .card *,
+    .row,
+    .row *,
+    table,
+    tr,
+    td,
+    th {
+        position: static !important;
+        float: none !important;
+    }
+
+    /* Specific print alignments for tables, especially the consultation report */
+    table.table {
+        width: 100% !important;
+        table-layout: auto !important;
+    }
+
+    table.table th,
+    table.table td {
+        word-break: normal !important;
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+
+    table.consultation-report-table th:nth-child(1),
+    table.consultation-report-table td:nth-child(1), /* Consultation No. */
+    table.consultation-report-table th:nth-child(2),
+    table.consultation-report-table td:nth-child(2), /* Date */
+    table.consultation-report-table th:nth-child(8),
+    table.consultation-report-table td:nth-child(8), /* Health Worker */
+    table.consultation-report-table th:nth-child(9),
+    table.consultation-report-table td:nth-child(9)  /* Status */ {
+        white-space: nowrap !important;
     }
 }

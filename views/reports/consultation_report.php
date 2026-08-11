@@ -30,9 +30,6 @@ require_once LAYOUT_PATH . 'sidebar.php';
                 <button onclick="window.print()" class="btn btn-outline-secondary">
                     <i class="bi bi-printer-fill me-1"></i> Print Report
                 </button>
-                <a href="<?= url('index.php?route=reports/consultations&' . http_build_query(array_merge($_GET, ['export' => 'csv']))) ?>" class="btn btn-success">
-                    <i class="bi bi-file-earmark-excel-fill me-1"></i> Export Excel/CSV
-                </a>
             </div>
         </div>
 

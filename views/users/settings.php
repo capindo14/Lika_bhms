@@ -60,20 +60,35 @@ require_once LAYOUT_PATH . 'sidebar.php';
                                 <div class="row g-3 mb-4">
                                     <div class="col-12">
                                         <label for="current_password" class="form-label fw-semibold small">Current Password</label>
-                                        <input type="password" class="form-control" id="current_password" name="current_password" placeholder="Enter current password to verify identity" autocomplete="current-password">
-                                        <div class="invalid-feedback">Current password is required to save changes.</div>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control border-end-0" id="current_password" name="current_password" placeholder="Enter current password to verify identity" autocomplete="current-password">
+                                            <span class="input-group-text bg-transparent border-start-0" style="cursor: pointer;" id="toggle-current-password">
+                                                <i class="bi bi-eye text-muted" id="current-password-eye-icon"></i>
+                                            </span>
+                                            <div class="invalid-feedback">Current password is required to save changes.</div>
+                                        </div>
                                     </div>
 
                                     <div class="col-12 col-md-6">
                                         <label for="new_password" class="form-label fw-semibold small">New Password</label>
-                                        <input type="password" class="form-control" id="new_password" name="new_password" placeholder="Enter new password" minlength="6" autocomplete="new-password">
-                                        <div class="invalid-feedback">New password must be at least 6 characters.</div>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control border-end-0" id="new_password" name="new_password" placeholder="Enter new password" minlength="6" autocomplete="new-password">
+                                            <span class="input-group-text bg-transparent border-start-0" style="cursor: pointer;" id="toggle-new-password">
+                                                <i class="bi bi-eye text-muted" id="new-password-eye-icon"></i>
+                                            </span>
+                                            <div class="invalid-feedback">New password must be at least 6 characters.</div>
+                                        </div>
                                     </div>
 
                                     <div class="col-12 col-md-6">
                                         <label for="confirm_password" class="form-label fw-semibold small">Confirm New Password</label>
-                                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Re-enter new password" autocomplete="new-password">
-                                        <div class="invalid-feedback" id="confirm-feedback">Confirm password does not match.</div>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control border-end-0" id="confirm_password" name="confirm_password" placeholder="Re-enter new password" autocomplete="new-password">
+                                            <span class="input-group-text bg-transparent border-start-0" style="cursor: pointer;" id="toggle-confirm-password">
+                                                <i class="bi bi-eye text-muted" id="confirm-password-eye-icon"></i>
+                                            </span>
+                                            <div class="invalid-feedback" id="confirm-feedback">Confirm password does not match.</div>
+                                        </div>
                                     </div>
                                 </div>
                             <?php else: ?>
@@ -103,6 +118,46 @@ require_once LAYOUT_PATH . 'sidebar.php';
 
 <script>
 $(document).ready(function() {
+    // Password Visibility Toggles
+    $('#toggle-current-password').on('click', function() {
+        const input = $('#current_password');
+        const eyeIcon = $('#current-password-eye-icon');
+        const type = input.attr('type') === 'password' ? 'text' : 'password';
+        input.attr('type', type);
+        
+        if (type === 'text') {
+            eyeIcon.removeClass('bi-eye').addClass('bi-eye-slash');
+        } else {
+            eyeIcon.removeClass('bi-eye-slash').addClass('bi-eye');
+        }
+    });
+
+    $('#toggle-new-password').on('click', function() {
+        const input = $('#new_password');
+        const eyeIcon = $('#new-password-eye-icon');
+        const type = input.attr('type') === 'password' ? 'text' : 'password';
+        input.attr('type', type);
+        
+        if (type === 'text') {
+            eyeIcon.removeClass('bi-eye').addClass('bi-eye-slash');
+        } else {
+            eyeIcon.removeClass('bi-eye-slash').addClass('bi-eye');
+        }
+    });
+
+    $('#toggle-confirm-password').on('click', function() {
+        const input = $('#confirm_password');
+        const eyeIcon = $('#confirm-password-eye-icon');
+        const type = input.attr('type') === 'password' ? 'text' : 'password';
+        input.attr('type', type);
+        
+        if (type === 'text') {
+            eyeIcon.removeClass('bi-eye').addClass('bi-eye-slash');
+        } else {
+            eyeIcon.removeClass('bi-eye-slash').addClass('bi-eye');
+        }
+    });
+
     $('#settings-form').on('submit', function(e) {
         const currentPass = $('#current_password').val();
         const newPass = $('#new_password').val();
@@ -113,6 +168,7 @@ $(document).ready(function() {
         if (newPass) {
             // Require current password
             if (!currentPass) {
+                // Since input is wrapped in input-group, we want is-invalid class on the input element
                 $('#current_password').attr('required', true).addClass('is-invalid');
                 valid = false;
             } else {

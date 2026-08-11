@@ -22,9 +22,6 @@ require_once LAYOUT_PATH . 'sidebar.php';
                 <button onclick="window.print()" class="btn btn-outline-secondary">
                     <i class="bi bi-printer-fill me-1"></i> Print Report
                 </button>
-                <a href="<?= url('index.php?route=reports/health_summary&export=csv' . ($filters['start_date'] ? '&start_date=' . $filters['start_date'] : '') . ($filters['end_date'] ? '&end_date=' . $filters['end_date'] : '')) ?>" class="btn btn-success">
-                    <i class="bi bi-file-earmark-excel-fill me-1"></i> Export Excel/CSV
-                </a>
             </div>
         </div>
 

@@ -161,7 +161,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                                         <td><?= escape($m['category']) ?></td>
                                         <td class="text-danger fw-bold"><?= $m['stock_qty'] ?> pcs</td>
                                         <td><?= $m['reorder_level'] ?> pcs</td>
-                                        <td><a href="<?= url('index.php?route=medicine') ?>" class="btn btn-sm btn-outline-secondary py-0 px-2 small">Restock</a></td>
+                                        <td><a href="<?= url('index.php?route=medicine') ?>" class="btn btn-sm btn-outline-success py-0 px-2 small fw-bold">Restock</a></td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>

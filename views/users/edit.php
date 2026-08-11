@@ -66,14 +66,24 @@ require_once LAYOUT_PATH . 'sidebar.php';
 
                             <div class="col-12 col-md-6">
                                 <label for="password" class="form-label fw-semibold small">New Password</label>
-                                <input type="password" class="form-control" id="password" name="password" placeholder="Leave blank to keep current" minlength="6" autocomplete="new-password">
-                                <div class="invalid-feedback">Password must be at least 6 characters.</div>
+                                <div class="input-group">
+                                    <input type="password" class="form-control border-end-0" id="password" name="password" placeholder="Leave blank to keep current" minlength="6" autocomplete="new-password">
+                                    <span class="input-group-text bg-transparent border-start-0" style="cursor: pointer;" id="toggle-password">
+                                        <i class="bi bi-eye text-muted" id="password-eye-icon"></i>
+                                    </span>
+                                    <div class="invalid-feedback">Password must be at least 6 characters.</div>
+                                </div>
                             </div>
 
                             <div class="col-12 col-md-6">
                                 <label for="confirm_password" class="form-label fw-semibold small">Confirm New Password</label>
-                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Confirm new password" autocomplete="new-password">
-                                <div class="invalid-feedback" id="confirm-feedback">Confirm password does not match.</div>
+                                <div class="input-group">
+                                    <input type="password" class="form-control border-end-0" id="confirm_password" name="confirm_password" placeholder="Confirm new password" autocomplete="new-password">
+                                    <span class="input-group-text bg-transparent border-start-0" style="cursor: pointer;" id="toggle-confirm-password">
+                                        <i class="bi bi-eye text-muted" id="confirm-password-eye-icon"></i>
+                                    </span>
+                                    <div class="invalid-feedback" id="confirm-feedback">Confirm password does not match.</div>
+                                </div>
                             </div>
                         </div>
 
@@ -94,6 +104,33 @@ require_once LAYOUT_PATH . 'sidebar.php';
 
 <script>
 $(document).ready(function() {
+    // Password Visibility Toggle
+    $('#toggle-password').on('click', function() {
+        const input = $('#password');
+        const eyeIcon = $('#password-eye-icon');
+        const type = input.attr('type') === 'password' ? 'text' : 'password';
+        input.attr('type', type);
+        
+        if (type === 'text') {
+            eyeIcon.removeClass('bi-eye').addClass('bi-eye-slash');
+        } else {
+            eyeIcon.removeClass('bi-eye-slash').addClass('bi-eye');
+        }
+    });
+
+    $('#toggle-confirm-password').on('click', function() {
+        const input = $('#confirm_password');
+        const eyeIcon = $('#confirm-password-eye-icon');
+        const type = input.attr('type') === 'password' ? 'text' : 'password';
+        input.attr('type', type);
+        
+        if (type === 'text') {
+            eyeIcon.removeClass('bi-eye').addClass('bi-eye-slash');
+        } else {
+            eyeIcon.removeClass('bi-eye-slash').addClass('bi-eye');
+        }
+    });
+
     $('#user-edit-form').on('submit', function(e) {
         const pass = $('#password').val();
         const confirm = $('#confirm_password').val();
