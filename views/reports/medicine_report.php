@@ -24,7 +24,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                     <i class="bi bi-arrow-left"></i> Reports Center
                 </a>
                 <h3 class="fw-bold mt-2 mb-1"><?= escape($pageTitle) ?></h3>
-                <p class="text-muted small">Generate reports for distributed medicine allocations and center supplies.</p>
+                <p class="text-muted small">Generate reports for distributed medicine allocations, family planning supplies, and center logistics.</p>
             </div>
             <div class="d-flex gap-2">
                 <button onclick="window.print()" class="btn btn-outline-secondary">
@@ -36,7 +36,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
         <!-- Print header -->
         <div class="d-none d-print-block text-center border-bottom pb-3 mb-4">
             <h4 class="fw-bold mb-0">Barangay Health Center</h4>
-            <h5>Medicine Distribution Report</h5>
+            <h5>Medicine & Family Planning Distribution Report</h5>
             <p class="text-muted small">Generated on: <?= date('Y-m-d H:i:s') ?> • Date-filtered Logs</p>
         </div>
 
@@ -67,9 +67,9 @@ require_once LAYOUT_PATH . 'sidebar.php';
 
                         <!-- Medicine Dropdown -->
                         <div class="col-12 col-md-4">
-                            <label for="medicine_id" class="form-label fw-semibold small">Select Medicine / Supply</label>
+                            <label for="medicine_id" class="form-label fw-semibold small">Select Medicine / Family Planning / Supply</label>
                             <select class="form-select select-sm" id="medicine_id" name="medicine_id">
-                                <option value="">All Medicines / Supplies</option>
+                                <option value="">All Medicines / Family Planning / Supplies</option>
                                 <?php foreach ($medicinesList as $med): ?>
                                     <option value="<?= $med['id'] ?>" <?= ($filters['medicine_id'] ?? '') == $med['id'] ? 'selected' : '' ?>><?= escape($med['name'] . ' (' . $med['code'] . ')') ?></option>
                                 <?php endforeach; ?>

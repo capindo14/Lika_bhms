@@ -9,16 +9,9 @@ require_once LAYOUT_PATH . 'sidebar.php';
     <div class="container-fluid p-3 p-md-4">
         
         <!-- Header -->
-        <div class="d-flex align-items-center justify-content-between mb-4">
-            <div>
-                <h3 class="fw-bold mb-1"><?= escape($pageTitle) ?></h3>
-                <p class="text-muted small mb-0">Manage system operator profiles, credential mappings, and review active audit trails.</p>
-            </div>
-            <div>
-                <a href="<?= url('index.php?route=users/create') ?>" class="btn btn-primary">
-                    <i class="bi bi-person-plus-fill me-1"></i> Create System Account
-                </a>
-            </div>
+        <div class="mb-4">
+            <h3 class="fw-bold mb-1"><?= escape($pageTitle) ?></h3>
+            <p class="text-muted small mb-0">Manage system profiles, and review active audit trails.</p>
         </div>
 
         <!-- Navigation Tabs -->
@@ -29,69 +22,55 @@ require_once LAYOUT_PATH . 'sidebar.php';
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link fw-bold text-secondary" id="audit-tab" data-bs-toggle="tab" data-bs-target="#audit-view" type="button" role="tab" aria-controls="audit-view" aria-selected="false">
-                    <i class="bi bi-shield-lock-fill me-1"></i> System Audit Logs
+                <button class="nav-link fw-bold text-secondary" id="logs-tab" data-bs-toggle="tab" data-bs-target="#logs-view" type="button" role="tab" aria-controls="logs-view" aria-selected="false">
+                    <i class="bi bi-journal-text me-1"></i> System Audit Trails
                 </button>
             </li>
         </ul>
 
+        <!-- Real-time Search Box and Action Buttons -->
+        <div class="row align-items-center mb-4 g-3">
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="input-group shadow-sm border rounded">
+                    <span class="input-group-text bg-white border-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="usersSearch" class="form-control border-0" placeholder="Search users or system audit logs...">
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-8 d-flex justify-content-md-end gap-2">
+                <button type="button" class="btn btn-primary" onclick="newUser()">
+                    <i class="bi bi-person-plus-fill me-1"></i> Create System Account
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab Content -->
         <div class="tab-content" id="usersTabsContent">
-            <!-- TAB 1: User Accounts -->
+            
+            <!-- User Accounts Directory -->
             <div class="tab-pane fade show active" id="accounts-view" role="tabpanel" aria-labelledby="accounts-tab">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-4">
                         <div class="table-responsive">
-                            <table id="users-table" class="table table-hover align-middle w-100">
+                            <table class="table table-hover align-middle w-100">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Name</th>
                                         <th>Username</th>
-                                        <th>Role Assigned</th>
+                                        <th>Role Authority</th>
                                         <th>Status</th>
+                                        <th>Date Created</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <?php foreach ($users as $u): ?>
-                                        <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="bg-primary bg-gradient text-white rounded-circle d-flex align-items-center justify-content-center fw-semibold me-2" style="width: 32px; height: 32px; font-size: 0.85rem;">
-                                                        <?= strtoupper(substr($u['fullname'], 0, 1)) ?>
-                                                    </div>
-                                                    <div class="fw-semibold"><?= escape($u['fullname']) ?></div>
-                                                </div>
-                                            </td>
-                                            <td class="fw-bold text-muted"><?= escape($u['username']) ?></td>
-                                            <td>
-                                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle">
-                                                    <?= escape($u['role']) ?>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-<?= $u['status'] === 'Active' ? 'success' : 'secondary' ?> bg-opacity-10 text-<?= $u['status'] === 'Active' ? 'success' : 'secondary' ?> border">
-                                                    <?= escape($u['status']) ?>
-                                                </span>
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="btn-group gap-1">
-                                                    <a href="<?= url("index.php?route=users/edit&id={$u['id']}") ?>" class="btn btn-outline-primary btn-sm rounded-2" title="Edit Profile">
-                                                        <i class="bi bi-pencil"></i>
-                                                    </a>
-                                                    <?php if ($u['id'] !== $_SESSION['user_id']): ?>
-                                                        <a href="<?= url("index.php?route=users/toggle_status&id={$u['id']}") ?>" class="btn btn-outline-warning btn-sm rounded-2" title="Toggle Active Status">
-                                                            <i class="bi bi-power"></i>
-                                                        </a>
-                                                        <button onclick="confirmDelete(<?= $u['id'] ?>, '<?= escape($u['username']) ?>')" class="btn btn-outline-danger btn-sm rounded-2" title="Remove Account">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
-                                                    <?php else: ?>
-                                                        <span class="text-muted small fst-italic">Active Session</span>
-                                                    <?php endif; ?>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
+                                <tbody id="usersTable">
+                                    <tr>
+                                        <td colspan="6" class="text-center py-5">
+                                            <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <div class="text-muted mt-2 small">Loading system accounts...</div>
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -99,80 +78,107 @@ require_once LAYOUT_PATH . 'sidebar.php';
                 </div>
             </div>
 
-            <!-- TAB 2: System Audit Logs -->
-            <div class="tab-pane fade" id="audit-view" role="tabpanel" aria-labelledby="audit-tab">
+            <!-- System Audit Trail Logs -->
+            <div class="tab-pane fade" id="logs-view" role="tabpanel" aria-labelledby="logs-tab">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-4">
-                        <div class="table-responsive">
-                            <table id="audit-table" class="table table-hover align-middle w-100 small">
-                                <thead class="table-light">
+                        <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                            <table class="table table-hover table-striped align-middle w-100">
+                                <thead class="table-light sticky-top">
                                     <tr>
                                         <th>Timestamp</th>
-                                        <th>Account</th>
-                                        <th>Action Taken</th>
-                                        <th>Description</th>
-                                        <th>IP Address</th>
+                                        <th>User Account</th>
+                                        <th>Action Tag</th>
+                                        <th>Log Description</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <?php foreach ($auditLogs as $log): ?>
-                                        <tr>
-                                            <td class="fw-medium text-nowrap"><?= date('Y-m-d H:i:s', strtotime($log['created_at'])) ?></td>
-                                            <td>
-                                                <div class="fw-semibold text-dark"><?= escape($log['fullname'] ?: 'Guest') ?></div>
-                                                <small class="text-muted"><?= escape($log['role'] ?: 'Public IP') ?> (<?= escape($log['username'] ?: 'guest') ?>)</small>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-light text-primary border border-primary-subtle fw-semibold">
-                                                    <?= escape($log['action']) ?>
-                                                </span>
-                                            </td>
-                                            <td class="text-wrap" style="max-width: 300px;"><?= escape($log['description']) ?></td>
-                                            <td class="text-muted text-nowrap"><i class="bi bi-laptop me-1"></i><?= escape($log['ip_address']) ?></td>
-                                        </tr>
-                                    <?php endforeach; ?>
+                                <tbody id="auditLogsTable">
+                                    <tr>
+                                        <td colspan="4" class="text-center py-5">
+                                            <div class="text-muted small">Select User Accounts tab to trigger initial fetch.</div>
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
 
     </div>
 </div>
 
-<?php require_once LAYOUT_PATH . 'footer.php'; ?>
+<!-- Create/Edit User Modal -->
+<div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary bg-gradient text-white">
+                <h5 class="modal-title fw-bold" id="userModalLabel">
+                    <i class="bi bi-person-badge-fill me-2"></i><span id="modalTitleText">Create System Account</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="userForm" class="needs-validation" novalidate autocomplete="off">
+                <input type="hidden" id="userId" name="id">
+                
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <!-- Full Name -->
+                        <div class="col-12">
+                            <label for="modalFullname" class="form-label fw-semibold small">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="modalFullname" name="fullname" required placeholder="e.g. Juan De La Cruz" minlength="3">
+                            <div class="invalid-feedback">Please enter a valid full name (at least 3 characters).</div>
+                        </div>
 
-<script>
-$(document).ready(function() {
-    $('#users-table').DataTable({
-        responsive: true,
-        order: [[0, 'asc']],
-        columnDefs: [
-            { orderable: false, targets: 4 }
-        ]
-    });
+                        <!-- Username -->
+                        <div class="col-12">
+                            <label for="modalUsername" class="form-label fw-semibold small">Username <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="modalUsername" name="username" required placeholder="e.g. juan_dlc" minlength="4" autocomplete="new-username">
+                            <div class="invalid-feedback">Please enter a unique username (at least 4 characters).</div>
+                        </div>
 
-    $('#audit-table').DataTable({
-        responsive: true,
-        order: [[0, 'desc']] // Latest activity logs first
-    });
-});
+                        <!-- Password -->
+                        <div class="col-12">
+                            <label for="modalPassword" class="form-label fw-semibold small" id="passwordLabel">Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="modalPassword" name="password" required placeholder="Enter password (min 6 chars)" minlength="6" autocomplete="new-password">
+                            <small class="text-muted" id="passwordHelpText" style="display: none;">Leave blank to retain current password.</small>
+                            <div class="invalid-feedback" id="passwordFeedback">Please enter a password with at least 6 characters.</div>
+                        </div>
 
-function confirmDelete(id, username) {
-    Swal.fire({
-        title: 'Delete User Account?',
-        text: `Are you sure you want to permanently delete the profile account of ${username}? This cannot be undone.`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#64748b',
-        confirmButtonText: 'Yes, Delete'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            window.location.href = `index.php?route=users/delete&id=${id}`;
-        }
-    });
-}
-</script>
+                        <!-- Role -->
+                        <div class="col-12 col-md-6">
+                            <label for="modalRole" class="form-label fw-semibold small">Role Authority <span class="text-danger">*</span></label>
+                            <select class="form-select" id="modalRole" name="role" required>
+                                <option value="" selected disabled>Select Role</option>
+                                <option value="Admin">Admin (Full Control)</option>
+                                <option value="Health Worker">Health Worker (Standard Logs)</option>
+                                <option value="Staff">Staff (Read / Dispense)</option>
+                            </select>
+                            <div class="invalid-feedback">Please assign an account role.</div>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="col-12 col-md-6">
+                            <label for="modalStatus" class="form-label fw-semibold small">Account Status <span class="text-danger">*</span></label>
+                            <select class="form-select" id="modalStatus" name="status" required>
+                                <option value="Active" selected>Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light px-4 py-3">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4" id="saveButton">Create Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<?php 
+$pageScript = url('js/users_js.js');
+require_once LAYOUT_PATH . 'footer.php'; 
+?>

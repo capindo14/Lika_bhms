@@ -52,4 +52,13 @@ class LoginController {
             redirect('auth/login');
         }
     }
+
+    /**
+     * Terminate the user session and redirect to login
+     */
+    public function logout(): void {
+        AuthService::logout();
+        flash('success', 'You have been logged out successfully.');
+        redirect('auth/login');
+    }
 }

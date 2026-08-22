@@ -44,7 +44,7 @@ $userRole = $currentUser['role'] ?? 'Staff';
         <!-- Medicine Distribution Module -->
         <a class="health-menu-item nav-link <?= is_active_route('medicine') ? 'active' : '' ?>" href="<?= url('index.php?route=medicine') ?>">
             <i class="bi bi-capsule"></i>
-            <span>Medicines / Stocks</span>
+            <span>Medicine / Family Planning</span>
         </a>
 
         <!-- Reports Module -->
@@ -70,7 +70,7 @@ $userRole = $currentUser['role'] ?? 'Staff';
 
     <div class="health-sidebar-footer">
         <!-- Sign Out -->
-        <a id="logout-btn" class="health-menu-item nav-link text-danger border border-danger border-opacity-10 bg-danger bg-opacity-10 justify-content-center text-center" href="<?= url('logout.php') ?>">
+        <a id="logout-btn" class="health-menu-item nav-link text-danger border border-danger border-opacity-10 bg-danger bg-opacity-10 justify-content-center text-center" href="<?= url('index.php?route=auth/logout') ?>">
             <i class="bi bi-box-arrow-left text-danger"></i>
             <span class="text-danger fw-semibold">Sign Out</span>
         </a>

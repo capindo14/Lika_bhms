@@ -14,6 +14,17 @@ class Resident {
      */
     public static function getAll(string $status = 'Active'): array {
         $db = Database::getConnection();
+        $whereClause = "r.status = :status";
+        $params = [':status' => $status];
+
+        if ($status === 'Pregnant') {
+            $whereClause = "r.status = 'Active' AND r.pregnancy_status = 'Pregnant'";
+            $params = [];
+        } elseif ($status === 'Infant') {
+            $whereClause = "r.status = 'Active' AND (TIMESTAMPDIFF(YEAR, r.birthdate, CURDATE()) < 5 OR (r.child_feeding_type IS NOT NULL AND r.child_feeding_type != '' AND r.child_feeding_type != 'N/A'))";
+            $params = [];
+        }
+
         $stmt = $db->prepare("
             SELECT r.*, TIMESTAMPDIFF(YEAR, r.birthdate, CURDATE()) AS age,
                    f.id AS family_id, f.family_no, fm.relationship_to_head,
@@ -85,10 +96,10 @@ class Resident {
             FROM residents r
             LEFT JOIN family_members fm ON r.id = fm.resident_id
             LEFT JOIN families f ON fm.family_id = f.id
-            WHERE r.status = :status AND r.deleted_at IS NULL 
+            WHERE {$whereClause} AND r.deleted_at IS NULL 
             ORDER BY r.last_name, r.first_name
         ");
-        $stmt->execute([':status' => $status]);
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
 
@@ -226,8 +237,8 @@ class Resident {
         $residentId = self::generateResidentId();
         
         $stmt = $db->prepare("
-            INSERT INTO residents (resident_id, first_name, middle_name, last_name, gender, birthdate, civil_status, contact_number, address, barangay, is_family_head, status)
-            VALUES (:resident_id, :first_name, :middle_name, :last_name, :gender, :birthdate, :civil_status, :contact_number, :address, :barangay, :is_family_head, 'Active')
+            INSERT INTO residents (resident_id, first_name, middle_name, last_name, gender, birthdate, civil_status, contact_number, address, is_family_head, pregnancy_status, child_feeding_type, status)
+            VALUES (:resident_id, :first_name, :middle_name, :last_name, :gender, :birthdate, :civil_status, :contact_number, :address, :is_family_head, :pregnancy_status, :child_feeding_type, 'Active')
         ");
 
         $stmt->execute([
@@ -240,8 +251,9 @@ class Resident {
             ':civil_status' => $data['civil_status'],
             ':contact_number' => $data['contact_number'] ?? null,
             ':address' => $data['address'],
-            ':barangay' => $data['barangay'] ?: 'Barangay Health Center',
-            ':is_family_head' => isset($data['is_family_head']) ? (int)$data['is_family_head'] : 0
+            ':is_family_head' => isset($data['is_family_head']) ? (int)$data['is_family_head'] : 0,
+            ':pregnancy_status' => $data['pregnancy_status'] ?? null,
+            ':child_feeding_type' => $data['child_feeding_type'] ?? null
         ]);
 
         return (int)$db->lastInsertId();
@@ -267,8 +279,9 @@ class Resident {
                 civil_status = :civil_status, 
                 contact_number = :contact_number, 
                 address = :address, 
-                barangay = :barangay, 
-                is_family_head = :is_family_head
+                is_family_head = :is_family_head,
+                pregnancy_status = :pregnancy_status,
+                child_feeding_type = :child_feeding_type
             WHERE id = :id AND deleted_at IS NULL
         ");
 
@@ -282,8 +295,9 @@ class Resident {
             ':civil_status' => $data['civil_status'],
             ':contact_number' => $data['contact_number'] ?? null,
             ':address' => $data['address'],
-            ':barangay' => $data['barangay'],
-            ':is_family_head' => isset($data['is_family_head']) ? (int)$data['is_family_head'] : 0
+            ':is_family_head' => isset($data['is_family_head']) ? (int)$data['is_family_head'] : 0,
+            ':pregnancy_status' => $data['pregnancy_status'] ?? null,
+            ':child_feeding_type' => $data['child_feeding_type'] ?? null
         ]);
     }
 

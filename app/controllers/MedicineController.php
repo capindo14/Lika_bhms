@@ -4,235 +4,399 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Models\Medicine;
-use App\Services\ValidationService;
 use Exception;
 
 class MedicineController {
     /**
-     * Display a listing of medicine inventory and distributions
+     * Display a listing of medicine inventory
      */
     public function index(): void {
         AuthMiddleware::handle();
-
-        // 1. Fetch Inventory Items
-        $medicines = Medicine::getAll();
-        
-        // 2. Fetch Low Stock Alerts
-        $lowStockAlerts = Medicine::getLowStockAlerts();
-
-        // 3. Fetch Recent Distributions
-        $db = \App\Config\Database::getConnection();
-        $stmtDist = $db->query("
-            SELECT md.*, 
-                   m.name AS medicine_name, 
-                   m.code AS medicine_code,
-                   CONCAT(r.last_name, ', ', r.first_name) AS resident_name,
-                   u.fullname AS worker_name
-            FROM medicine_distributions md
-            JOIN medicines m ON md.medicine_id = m.id
-            JOIN residents r ON md.resident_id = r.id
-            JOIN users u ON md.user_id = u.id
-            WHERE md.deleted_at IS NULL
-            ORDER BY md.distribution_date DESC, md.id DESC
-        ");
-        $distributions = $stmtDist->fetchAll();
-
-        $pageTitle = 'Medicine Inventory & Stocks';
+        $pageTitle = 'Medicine & Family Planning';
+        $residents = \App\Models\Resident::getAll(); // Fetch active residents for the distribution form dropdown
         require_once VIEW_PATH . 'medicine/index.php';
     }
 
     /**
-     * Display creation form
+     * Get all active inventory records in JSON
      */
-    public function create(): void {
+    public function apiList(): void {
         AuthMiddleware::handle();
-        $pageTitle = 'Add Inventory Item';
-        require_once VIEW_PATH . 'medicine/create.php';
+        header('Content-Type: application/json');
+        $medicines = Medicine::getAll();
+        echo json_encode($medicines);
+        exit;
     }
 
     /**
-     * Store new inventory item
+     * Get detail of a single record in JSON
      */
-    public function store(): void {
+    public function apiDetail(): void {
         AuthMiddleware::handle();
-
-        if (!verify_csrf_token($_POST['csrf_token'] ?? null)) {
-            flash('error', 'CSRF verification failed. Please try again.');
-            redirect('medicine/create');
-        }
-
-        $validator = new ValidationService();
-        $data = sanitize_array($_POST);
-
-        $rules = [
-            'name' => 'required|min:2',
-            'category' => 'required',
-            'stock_qty' => 'required|numeric',
-            'reorder_level' => 'required|numeric'
-        ];
-
-        if (!$validator->validate($data, $rules)) {
-            flash('error', $validator->getFirstError());
-            redirect('medicine/create');
-        }
-
-        try {
-            $insertedId = Medicine::create($data);
-            
-            // Log action
-            db_log('CREATE_MEDICINE', "Added inventory stock item: " . $data['name'] . " (ID: " . $insertedId . ")");
-            
-            flash('success', 'Medicine/vaccine inventory item created.');
-            redirect('medicine');
-        } catch (Exception $e) {
-            flash('error', $e->getMessage());
-            redirect('medicine/create');
-        }
-    }
-
-    /**
-     * Display edit form
-     */
-    public function edit(): void {
-        AuthMiddleware::handle();
-
+        header('Content-Type: application/json');
+        
         $id = (int)($_GET['id'] ?? 0);
         $medicine = Medicine::getById($id);
 
         if (!$medicine) {
-            flash('error', 'Inventory record not found.');
-            redirect('medicine');
+            echo json_encode(['status' => 'error', 'message' => 'Medicine record not found']);
+            exit;
         }
 
-        $pageTitle = 'Edit Inventory Details - ' . $medicine['code'];
-        require_once VIEW_PATH . 'medicine/edit.php';
+        echo json_encode($medicine);
+        exit;
     }
 
     /**
-     * Update inventory details
+     * Insert a new record (JSON POST request)
      */
-    public function update(): void {
+    public function apiStore(): void {
         AuthMiddleware::handle();
+        header('Content-Type: application/json');
 
-        $id = (int)($_POST['id'] ?? 0);
-        if (!$id) {
-            flash('error', 'Invalid inventory record.');
-            redirect('medicine');
-        }
+        $data = json_decode(file_get_contents("php://input"), true);
+        
+        $name = trim($data['name'] ?? '');
+        $category = trim($data['category'] ?? '');
+        $stock_qty = isset($data['stock_qty']) ? (int)$data['stock_qty'] : 0;
+        $reorder_level = isset($data['reorder_level']) ? (int)$data['reorder_level'] : 10;
+        $description = trim($data['description'] ?? '');
 
-        if (!verify_csrf_token($_POST['csrf_token'] ?? null)) {
-            flash('error', 'CSRF verification failed. Please try again.');
-            redirect("medicine");
-        }
-
-        $validator = new ValidationService();
-        $data = sanitize_array($_POST);
-
-        $rules = [
-            'name' => 'required|min:2',
-            'category' => 'required',
-            'stock_qty' => 'required|numeric',
-            'reorder_level' => 'required|numeric'
-        ];
-
-        if (!$validator->validate($data, $rules)) {
-            flash('error', $validator->getFirstError());
-            redirect("medicine");
+        if ($name === '' || $category === '') {
+            echo json_encode([
+                "status" => "error",
+                "message" => "Name and category are required."
+            ]);
+            exit;
         }
 
         try {
-            Medicine::update($id, $data);
+            $insertedId = Medicine::create([
+                'name' => $name,
+                'category' => $category,
+                'stock_qty' => $stock_qty,
+                'reorder_level' => $reorder_level,
+                'description' => $description
+            ]);
             
-            // Log update
-            db_log('UPDATE_MEDICINE', "Updated inventory details for item ID: " . $id);
+            db_log('CREATE_MEDICINE_JS', "Added medicine via JS CRUD: " . $name . " (ID: " . $insertedId . ")");
             
-            flash('success', 'Inventory details updated successfully.');
-            redirect('medicine');
+            echo json_encode([
+                "status" => "success",
+                "message" => "Medicine added successfully.",
+                "id" => $insertedId
+            ]);
         } catch (Exception $e) {
-            flash('error', $e->getMessage());
-            redirect("medicine");
+            echo json_encode([
+                "status" => "error",
+                "message" => $e->getMessage()
+            ]);
         }
+        exit;
     }
 
     /**
-     * Restock action (quick update via post)
+     * Update an existing record (JSON POST request)
      */
-    public function restock(): void {
-        AuthMiddleware::handle(['Admin', 'Health Worker']);
+    public function apiUpdate(): void {
+        AuthMiddleware::handle();
+        header('Content-Type: application/json');
 
-        if (!verify_csrf_token($_POST['csrf_token'] ?? null)) {
-            flash('error', 'CSRF verification failed. Please try again.');
-            redirect('medicine');
+        $data = json_decode(file_get_contents("php://input"), true);
+        
+        $id = isset($data['id']) ? (int)$data['id'] : 0;
+        $name = trim($data['name'] ?? '');
+        $category = trim($data['category'] ?? '');
+        $stock_qty = isset($data['stock_qty']) ? (int)$data['stock_qty'] : 0;
+        $reorder_level = isset($data['reorder_level']) ? (int)$data['reorder_level'] : 10;
+        $description = trim($data['description'] ?? '');
+
+        if (!$id || $name === '' || $category === '') {
+            echo json_encode([
+                "status" => "error",
+                "message" => "ID, name, and category are required."
+            ]);
+            exit;
         }
 
-        $id = (int)($_POST['medicine_id'] ?? 0);
-        $qty = (int)($_POST['restock_qty'] ?? 0);
+        try {
+            Medicine::update($id, [
+                'name' => $name,
+                'category' => $category,
+                'stock_qty' => $stock_qty,
+                'reorder_level' => $reorder_level,
+                'description' => $description
+            ]);
+            
+            db_log('UPDATE_MEDICINE_JS', "Updated medicine details via JS CRUD for item ID: " . $id);
+            
+            echo json_encode([
+                "status" => "success",
+                "message" => "Medicine details updated successfully."
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                "status" => "error",
+                "message" => $e->getMessage()
+            ]);
+        }
+        exit;
+    }
+
+    /**
+     * Soft-delete a record (JSON POST request)
+     */
+    public function apiDelete(): void {
+        AuthMiddleware::handle(['Admin', 'Health Worker']);
+        header('Content-Type: application/json');
+
+        $data = json_decode(file_get_contents("php://input"), true);
+        $id = isset($data['id']) ? (int)$data['id'] : 0;
+
+        if (!$id) {
+            echo json_encode([
+                "status" => "error",
+                "message" => "Invalid record ID."
+            ]);
+            exit;
+        }
+
+        $medicine = Medicine::getById($id);
+        if (!$medicine) {
+            echo json_encode([
+                "status" => "error",
+                "message" => "Inventory record not found."
+            ]);
+            exit;
+        }
+
+        if (Medicine::delete($id)) {
+            db_log('DELETE_MEDICINE_JS', "Deleted medicine item via JS CRUD: " . $medicine['name'] . " (ID: " . $id . ")");
+            echo json_encode([
+                "status" => "success",
+                "message" => "Medicine deleted successfully."
+            ]);
+        } else {
+            echo json_encode([
+                "status" => "error",
+                "message" => "Failed to delete medicine."
+            ]);
+        }
+        exit;
+    }
+
+    /**
+     * Restock an item (JSON POST request)
+     */
+    public function apiRestock(): void {
+        AuthMiddleware::handle(['Admin', 'Health Worker']);
+        header('Content-Type: application/json');
+
+        $data = json_decode(file_get_contents("php://input"), true);
+        $id = isset($data['medicine_id']) ? (int)$data['medicine_id'] : 0;
+        $qty = isset($data['restock_qty']) ? (int)$data['restock_qty'] : 0;
 
         if (!$id || $qty <= 0) {
-            flash('error', 'Invalid restock quantity parameters.');
-            redirect('medicine');
+            echo json_encode([
+                "status" => "error",
+                "message" => "Invalid restock quantity parameters."
+            ]);
+            exit;
         }
 
         try {
             Medicine::addStock($id, $qty);
             $med = Medicine::getById($id);
+            db_log('RESTOCK_MEDICINE_JS', "Restocked item via JS CRUD: " . $med['name'] . " with quantity: " . $qty);
             
-            // Log restock
-            db_log('RESTOCK_MEDICINE', "Restocked item " . $med['name'] . " with quantity: " . $qty);
-            
-            flash('success', "Stock incremented successfully. New stock: {$med['stock_qty']}");
+            echo json_encode([
+                "status" => "success",
+                "message" => "Stock incremented successfully.",
+                "new_stock" => $med['stock_qty']
+            ]);
         } catch (Exception $e) {
-            flash('error', $e->getMessage());
+            echo json_encode([
+                "status" => "error",
+                "message" => $e->getMessage()
+            ]);
         }
-
-        redirect('medicine');
+        exit;
     }
 
     /**
-     * Delete inventory record
+     * Get list of direct distributions in JSON
      */
-    public function delete(): void {
-        AuthMiddleware::handle(['Admin', 'Health Worker']);
-
-        $id = (int)($_GET['id'] ?? 0);
-        $medicine = Medicine::getById($id);
-
-        if (!$medicine) {
-            flash('error', 'Inventory record not found.');
-            redirect('medicine');
-        }
-
-        if (Medicine::delete($id)) {
-            // Log deletion
-            db_log('DELETE_MEDICINE', "Deleted medicine item: " . $medicine['name'] . " (ID: " . $id . ")");
-            
-            flash('success', 'Inventory item deleted successfully.');
-        } else {
-            flash('error', 'Failed to delete inventory item.');
-        }
-
-        redirect('medicine');
-    }
-
-    /**
-     * Get detail JSON for modal edit
-     */
-    public function detail_json(): void {
+    public function distribution_list(): void {
         AuthMiddleware::handle();
-
         header('Content-Type: application/json');
-        $id = (int)($_GET['id'] ?? 0);
-        $medicine = Medicine::getById($id);
+        $distributions = Medicine::getDistributions();
+        echo json_encode($distributions);
+        exit;
+    }
 
-        if (!$medicine) {
-            echo json_encode(['success' => false, 'message' => 'Inventory record not found']);
+    /**
+     * Create a new distribution record (JSON POST request)
+     */
+    public function distribute(): void {
+        AuthMiddleware::handle(['Admin', 'Health Worker']);
+        header('Content-Type: application/json');
+
+        $data = json_decode(file_get_contents("php://input"), true);
+        
+        $medicine_id = isset($data['medicine_id']) ? (int)$data['medicine_id'] : 0;
+        $resident_id = isset($data['resident_id']) ? (int)$data['resident_id'] : 0;
+        $quantity = isset($data['quantity']) ? (int)$data['quantity'] : 0;
+        $distribution_date = trim($data['distribution_date'] ?? '');
+        $user = get_logged_in_user();
+
+        if (!$medicine_id || !$resident_id || !$quantity) {
+            echo json_encode([
+                "status" => "error",
+                "message" => "Medicine, recipient, and quantity are required."
+            ]);
             exit;
         }
 
+        try {
+            $insertedId = Medicine::logDistribution($medicine_id, $resident_id, $quantity, $distribution_date, $user['id']);
+            db_log('LOG_DISTRIBUTION', "Logged medicine distribution. ID: " . $insertedId);
+
+            echo json_encode([
+                "status" => "success",
+                "message" => "Distribution logged successfully."
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                "status" => "error",
+                "message" => $e->getMessage()
+            ]);
+        }
+        exit;
+    }
+
+    /**
+     * Get single distribution detail with resident family profile relationship
+     */
+    public function distribution_detail(): void {
+        AuthMiddleware::handle();
+        header('Content-Type: application/json');
+        
+        $id = (int)($_GET['id'] ?? 0);
+        $dist = Medicine::getDistributionById($id);
+        
+        if (!$dist) {
+            echo json_encode(['success' => false, 'message' => 'Distribution log not found']);
+            exit;
+        }
+        
+        $db = \App\Config\Database::getConnection();
+        
+        // First check if resident is head of a family
+        $stmtHead = $db->prepare("
+            SELECT f.id AS family_id, f.family_no, 
+                   CONCAT(r.last_name, ', ', r.first_name) AS head_name,
+                   'Family Head' AS relationship
+            FROM families f
+            JOIN residents r ON f.head_resident_id = r.id
+            WHERE f.head_resident_id = :resident_id AND f.deleted_at IS NULL
+        ");
+        $stmtHead->execute([':resident_id' => $dist['resident_id']]);
+        $familyInfo = $stmtHead->fetch();
+        
+        // If not head, check if resident is member of a family
+        if (!$familyInfo) {
+            $stmtMember = $db->prepare("
+                SELECT f.id AS family_id, f.family_no, 
+                       CONCAT(r_head.last_name, ', ', r_head.first_name) AS head_name,
+                       fm.relationship_to_head AS relationship
+                FROM family_members fm
+                JOIN families f ON fm.family_id = f.id
+                JOIN residents r_head ON f.head_resident_id = r_head.id
+                WHERE fm.resident_id = :resident_id AND f.deleted_at IS NULL
+            ");
+            $stmtMember->execute([':resident_id' => $dist['resident_id']]);
+            $familyInfo = $stmtMember->fetch();
+        }
+        
         echo json_encode([
             'success' => true,
-            'data' => $medicine
+            'distribution' => $dist,
+            'family' => $familyInfo ?: null
         ]);
+        exit;
+    }
+
+    /**
+     * Delete distribution record (JSON POST request)
+     */
+    public function delete_distribution(): void {
+        AuthMiddleware::handle(['Admin', 'Health Worker']);
+        header('Content-Type: application/json');
+
+        $data = json_decode(file_get_contents("php://input"), true);
+        $id = isset($data['id']) ? (int)$data['id'] : 0;
+
+        if (!$id) {
+            echo json_encode([
+                "status" => "error",
+                "message" => "Invalid transaction ID."
+            ]);
+            exit;
+        }
+
+        try {
+            Medicine::deleteDistribution($id);
+            db_log('DELETE_DISTRIBUTION', "Cancelled/deleted distribution record ID: " . $id);
+            
+            echo json_encode([
+                "status" => "success",
+                "message" => "Distribution transaction cancelled successfully."
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                "status" => "error",
+                "message" => $e->getMessage()
+            ]);
+        }
+        exit;
+    }
+
+    /**
+     * Update distribution record (JSON POST request)
+     */
+    public function update_distribution(): void {
+        AuthMiddleware::handle(['Admin', 'Health Worker']);
+        header('Content-Type: application/json');
+
+        $data = json_decode(file_get_contents("php://input"), true);
+        $id = isset($data['id']) ? (int)$data['id'] : 0;
+        $medicine_id = isset($data['medicine_id']) ? (int)$data['medicine_id'] : 0;
+        $resident_id = isset($data['resident_id']) ? (int)$data['resident_id'] : 0;
+        $quantity = isset($data['quantity']) ? (int)$data['quantity'] : 0;
+        $distribution_date = trim($data['distribution_date'] ?? '');
+
+        if (!$id || !$medicine_id || !$resident_id || !$quantity || $distribution_date === '') {
+            echo json_encode([
+                "status" => "error",
+                "message" => "All fields are required."
+            ]);
+            exit;
+        }
+
+        try {
+            Medicine::updateDistribution($id, $medicine_id, $resident_id, $quantity, $distribution_date);
+            db_log('UPDATE_DISTRIBUTION', "Updated distribution record ID: " . $id);
+            
+            echo json_encode([
+                "status" => "success",
+                "message" => "Distribution transaction updated successfully."
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                "status" => "error",
+                "message" => $e->getMessage()
+            ]);
+        }
         exit;
     }
 }

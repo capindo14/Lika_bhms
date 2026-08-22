@@ -21,7 +21,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
             <div class="alert alert-warning alert-dismissible fade show border-0 shadow-sm d-flex align-items-center mb-4 rounded-3" role="alert">
                 <i class="bi bi-exclamation-triangle-fill fs-4 me-3 text-warning"></i>
                 <div>
-                    <strong>Inventory Alert:</strong> There are currently <strong><?= $lowStockCount ?></strong> medicine/vaccine item(s) running below their reorder thresholds.
+                    <strong>Inventory Alert:</strong> There are currently <strong><?= $lowStockCount ?></strong> medicine/vaccine/family planning item(s) running below their reorder thresholds.
                     <a href="<?= url('index.php?route=medicine') ?>" class="alert-link text-decoration-none ms-2">View Stocks <i class="bi bi-arrow-right"></i></a>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -98,7 +98,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
             <!-- Doughnut Chart: Medicine Distribution -->
             <div class="col-12 col-md-6 col-xl-4">
                 <div class="card h-100 border-0 p-4 shadow-sm">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-capsule-prescription text-success me-2"></i>Medicine Allocation</h5>
+                    <h5 class="fw-bold mb-3"><i class="bi bi-capsule-prescription text-success me-2"></i>Medicine & Family Planning</h5>
                     <div style="position: relative; height: 320px; display: flex; align-items: center; justify-content: center;">
                         <canvas id="medicineChart"></canvas>
                     </div>
@@ -204,8 +204,8 @@ require_once LAYOUT_PATH . 'sidebar.php';
                                     </tr>
                                 <?php else: ?>
                                     <?php foreach ($upcomingImmunizations as $i): ?>
-                                        <tr>
-                                            <td class="fw-semibold ps-4"><?= escape($i['resident_name']) ?></td>
+                                        <tr role="button" onclick="window.location.href='<?= url('index.php?route=immunization') ?>'" title="Click to view immunization management">
+                                            <td class="fw-semibold ps-4 text-primary"><?= escape($i['resident_name']) ?> <i class="bi bi-box-arrow-up-right ms-1 small" style="font-size: 0.75rem;"></i></td>
                                             <td><span class="badge bg-info bg-opacity-10 text-info border border-info-subtle"><i class="bi bi-shield-plus me-1"></i><?= escape($i['vaccine_name']) ?></span></td>
                                             <td><?= escape($i['dose']) ?></td>
                                             <td class="text-danger fw-medium pe-4 text-end"><?= date('F d, Y', strtotime($i['next_schedule'])) ?></td>
@@ -229,13 +229,17 @@ require_once LAYOUT_PATH . 'sidebar.php';
                             <?php if (empty($recentActivities)): ?>
                                 <li class="text-muted text-center py-3">No activity logs recorded.</li>
                             <?php else: ?>
-                                <?php foreach ($recentActivities as $log): ?>
+                                <?php foreach ($recentActivities as $log): 
+                                    $actionDisplay = str_replace('_JS', '', $log['action']);
+                                    $descDisplay = str_replace(['via JS CRUD', 'via JS:', 'via JS', '  '], ['', ':', '', ' '], $log['description']);
+                                    $descDisplay = trim(str_replace(' : ', ': ', $descDisplay));
+                                ?>
                                     <li class="mb-3 pb-3 border-bottom last-border-0">
                                         <div class="d-flex justify-content-between mb-1">
-                                            <span class="fw-semibold small text-primary"><?= escape($log['action']) ?></span>
+                                            <span class="fw-semibold small text-primary"><?= escape($actionDisplay) ?></span>
                                             <span class="text-muted small" style="font-size: 0.75rem;"><?= date('M d, H:i', strtotime($log['created_at'])) ?></span>
                                         </div>
-                                        <p class="text-muted small mb-1"><?= escape($log['description']) ?></p>
+                                        <p class="text-muted small mb-1"><?= escape($descDisplay) ?></p>
                                         <span class="badge bg-secondary bg-opacity-10 text-secondary small border border-secondary-subtle" style="font-size: 0.7rem;">
                                             By: <?= escape($log['fullname'] ?: 'Guest') ?> (<?= escape($log['role'] ?: 'Unknown') ?>)
                                         </span>

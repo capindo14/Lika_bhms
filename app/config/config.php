@@ -11,8 +11,17 @@ if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.cookie_httponly', 1);
     ini_set('session.use_only_cookies', 1);
     
-    // In production, we'd enable secure cookies, but in XAMPP localhost we disable it to prevent login issues
-    // ini_set('session.cookie_secure', 1); 
+    // Auto-detect secure HTTPS context to enable secure session cookies
+    $isSecure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
+    
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'domain' => '',
+        'secure' => $isSecure,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
 
     session_start();
 }

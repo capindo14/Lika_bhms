@@ -16,22 +16,150 @@
     <link href="<?= url('css/style.css') ?>" rel="stylesheet">
     <style>
         body.login-body {
-            background: linear-gradient(135deg, #2222223b 0%, #0728ffd8 100%);
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(rgba(15, 23, 42, 0.39), rgba(15, 23, 42, 0.55)), url('<?= url('images/login-bg.jpg') ?>');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 1.5rem;
+            position: relative;
         }
         [data-bs-theme="dark"] body.login-body {
-            background: linear-gradient(135deg, #0f172a 0%, #064e3b 100%);
+            background: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.75)), url('<?= url('images/login-bg.jpg') ?>');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
         }
         .login-card {
-            border-radius: 1.25rem;
+            background: rgba(15, 23, 42, 0.45) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 1.5rem !important;
             max-width: 450px;
             width: 100%;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+            color: #ffffff;
+            z-index: 2;
+        }
+        .login-card h4 {
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            letter-spacing: -0.025em;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .login-card p.text-muted {
+            color: rgba(255, 255, 255, 0.85) !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        .login-card .rounded-circle {
+            width: 75px !important;
+            height: 75px !important;
+            font-size: 2.2rem !important;
+            background: linear-gradient(135deg, #0f52ba 0%, #0284c7 100%) !important;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 20px rgba(15, 82, 186, 0.4) !important;
+            transition: all 0.3s ease;
+        }
+        .login-card .rounded-circle:hover {
+            transform: scale(1.05) rotate(5deg);
+            box-shadow: 0 0 25px rgba(15, 82, 186, 0.6) !important;
+        }
+        .login-card .form-label {
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            letter-spacing: 0.01em;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        .login-card .input-group {
+            border-radius: 50px;
+            background-color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+        .login-card .input-group:focus-within {
+            box-shadow: 0 0 0 3px rgba(15, 82, 186, 0.4);
+            border-color: #0f52ba;
+        }
+        .login-card .input-group-text {
+            background-color: transparent !important;
+            border: none !important;
+            padding-left: 1.25rem;
+            color: #0f52ba !important;
+        }
+        .login-card .input-group-text i {
+            color: #0f52ba !important;
+        }
+        .login-card .form-control {
+            background-color: transparent !important;
+            border: none !important;
+            padding: 0.75rem 1.25rem 0.75rem 0.5rem !important;
+            font-size: 0.95rem !important;
+            color: #0f172a !important;
+            border-radius: 0 !important;
+            font-weight: 500 !important;
+        }
+        .login-card .form-control::placeholder {
+            color: #94a3b8 !important;
+        }
+        .login-card #toggle-password {
+            padding-right: 1.25rem;
+            padding-left: 0.5rem;
+        }
+        .login-card .form-check-label {
+            color: #ffffff !important;
+            font-weight: 500 !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        .login-card .form-check-input {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .login-card .form-check-input:checked {
+            background-color: #0f52ba;
+            border-color: #0f52ba;
+        }
+        .login-card a.text-primary {
+            color: #38bdf8 !important;
+            font-weight: 500 !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+        }
+        .login-card a.text-primary:hover {
+            color: #7dd3fc !important;
+            text-decoration: underline !important;
+        }
+        .login-card .btn-primary {
+            border-radius: 50px !important;
+            background: rgba(15, 82, 186, 0.8) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            backdrop-filter: blur(4px);
+            padding: 0.75rem 1.5rem !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 15px rgba(15, 82, 186, 0.3) !important;
+        }
+        .login-card .btn-primary:hover {
+            background: rgba(15, 82, 186, 0.95) !important;
+            box-shadow: 0 6px 20px rgba(15, 82, 186, 0.5) !important;
+            transform: translateY(-1px);
+        }
+        .login-card .btn-primary:active {
+            transform: translateY(1px);
+        }
+        .login-card .text-center.mt-3 span {
+            color: rgba(255, 255, 255, 0.85) !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        .login-card .text-center.mt-3 strong {
+            color: #ffffff !important;
         }
     </style>
 </head>

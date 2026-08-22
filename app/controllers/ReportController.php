@@ -120,7 +120,7 @@ class ReportController {
 
 
 
-        $pageTitle = 'Medicine Allocations Report';
+        $pageTitle = 'Medicine & Family Planning Report';
         require_once VIEW_PATH . 'reports/medicine_report.php';
     }
 }

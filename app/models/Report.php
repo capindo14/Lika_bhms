@@ -378,9 +378,8 @@ class Report {
         $stmt->execute($medParams);
         $medicinesList = $stmt->fetchAll();
 
-        // Served Residents list
         $stmt = $db->prepare("
-            SELECT DISTINCT r.id, r.resident_id AS resident_code, CONCAT(r.last_name, ', ', r.first_name) AS resident_name, r.gender, TIMESTAMPDIFF(YEAR, r.birthdate, CURDATE()) AS age, r.contact_number, r.barangay
+            SELECT DISTINCT r.id, r.resident_id AS resident_code, CONCAT(r.last_name, ', ', r.first_name) AS resident_name, r.gender, TIMESTAMPDIFF(YEAR, r.birthdate, CURDATE()) AS age, r.contact_number
             FROM residents r
             WHERE r.deleted_at IS NULL AND r.id IN (
                 SELECT resident_id FROM consultations WHERE {$resWhereCon}

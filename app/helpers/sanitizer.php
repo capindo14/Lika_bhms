@@ -75,6 +75,11 @@ if (!function_exists('db_log')) {
      */
     function db_log(string $action, string $description, ?int $userId = null): void {
         try {
+            // Normalize action and description to remove "JS" annotations
+            $action = str_replace('_JS', '', $action);
+            $description = str_replace(['via JS CRUD', 'via JS:', 'via JS', '  '], ['', ':', '', ' '], $description);
+            $description = trim(str_replace(' : ', ': ', $description));
+
             $db = \App\Config\Database::getConnection();
             $stmt = $db->prepare("
                 INSERT INTO activity_logs (user_id, action, description, ip_address, user_agent)

@@ -46,6 +46,9 @@ class AuthService {
                 return ['success' => false, 'message' => 'Invalid username or password.'];
             }
             
+            // Regenerate session ID to prevent Session Fixation
+            session_regenerate_id(true);
+            
             // Login Success! Set session details
             $_SESSION['user_id'] = (int)$user['id'];
             $_SESSION['user_username'] = $user['username'];

@@ -17,7 +17,9 @@ class Consultation {
         $stmt = $db->query("
             SELECT c.*, 
                    CONCAT(r.last_name, ', ', r.first_name) AS resident_name,
+                   CONCAT(r.last_name, ', ', r.first_name) AS patient_name,
                    r.resident_id AS resident_code,
+                   r.resident_id AS patient_code,
                    u.fullname AS worker_name,
                    m.name AS medicine_name
             FROM consultations c
@@ -41,9 +43,13 @@ class Consultation {
         $stmt = $db->prepare("
             SELECT c.*, 
                    CONCAT(r.last_name, ', ', r.first_name) AS resident_name,
+                   CONCAT(r.last_name, ', ', r.first_name) AS patient_name,
                    r.resident_id AS resident_code,
+                   r.resident_id AS patient_code,
                    r.gender AS resident_gender,
+                   r.gender AS patient_gender,
                    TIMESTAMPDIFF(YEAR, r.birthdate, CURDATE()) AS resident_age,
+                   TIMESTAMPDIFF(YEAR, r.birthdate, CURDATE()) AS patient_age,
                    u.fullname AS worker_name,
                    m.name AS medicine_name
             FROM consultations c
@@ -329,10 +335,13 @@ class Consultation {
         $stmt = $db->prepare("
             SELECT MONTH(consultation_date) as month, COUNT(*) as count 
             FROM consultations 
-            WHERE YEAR(consultation_date) = :year AND deleted_at IS NULL
+            WHERE consultation_date >= :start_date AND consultation_date <= :end_date AND deleted_at IS NULL
             GROUP BY MONTH(consultation_date)
         ");
-        $stmt->execute([':year' => $year]);
+        $stmt->execute([
+            ':start_date' => $year . '-01-01',
+            ':end_date' => $year . '-12-31'
+        ]);
         $rows = $stmt->fetchAll();
         
         $counts = array_fill(1, 12, 0);

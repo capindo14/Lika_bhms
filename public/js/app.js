@@ -308,6 +308,9 @@ const App = {
                 dateFormat: 'Y-m-d',
                 allowInput: true,
                 maxDate: 'today',
+                onChange: function (selectedDates, dateStr, instance) {
+                    el.dispatchEvent(new Event('change'));
+                },
                 onReady: function (selectedDates, dateStr, instance) {
                     const container = instance.currentYearElement.parentNode;
                     if (container.querySelector('.flatpickr-custom-year-select')) return;
@@ -369,4 +372,90 @@ const App = {
             });
         });
     }
+};
+
+// Global Fetch Interceptor for automatic CSRF Token Header Injection
+(function() {
+    const originalFetch = window.fetch;
+    window.fetch = async function(input, init) {
+        init = init || {};
+        init.headers = init.headers || {};
+        
+        // Retrieve the CSRF token from the meta tag
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        if (csrfMeta) {
+            const token = csrfMeta.getAttribute('content');
+            
+            // Inject header for non-GET requests
+            const method = (init.method || 'GET').toUpperCase();
+            if (method !== 'GET') {
+                if (init.headers instanceof Headers) {
+                    init.headers.set('X-CSRF-TOKEN', token);
+                } else {
+                    init.headers['X-CSRF-TOKEN'] = token;
+                }
+            }
+        }
+        
+        return originalFetch(input, init);
+    };
+})();
+
+// Global escapeHtml helper function
+window.escapeHtml = function(string) {
+    if (!string) return '';
+    return String(string)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+};
+
+// Global showToast helper function using SweetAlert2
+window.showToast = function(icon, message) {
+    if (typeof Swal === 'undefined') return;
+    
+    // Select semantic color themes and custom classes
+    let bgColor = '#1e293b'; // Default Dark Slate
+    let textColor = '#ffffff';
+    let iconColor = '#ffffff';
+    let customToastClass = '';
+
+    if (icon === 'success') {
+        bgColor = '#10b981'; // Emerald Green
+        customToastClass = 'swal2-success-toast';
+    } else if (icon === 'error') {
+        bgColor = '#ef4444'; // Rose Red
+        customToastClass = 'swal2-error-toast';
+    } else if (icon === 'warning') {
+        bgColor = '#f59e0b'; // Amber Yellow
+        customToastClass = 'swal2-warning-toast';
+    } else if (icon === 'info') {
+        bgColor = '#3b82f6'; // Blue
+        customToastClass = 'swal2-info-toast';
+    }
+
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: bgColor,
+        color: textColor,
+        iconColor: iconColor,
+        customClass: {
+            popup: customToastClass
+        },
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
+        }
+    });
+
+    Toast.fire({
+        icon: icon,
+        title: message
+    });
 };

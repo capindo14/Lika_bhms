@@ -23,6 +23,30 @@ class AuthMiddleware {
             redirect('auth/login');
         }
 
+        // Validate CSRF token for all state-changing POST requests
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
+            if (!verify_csrf_token($token)) {
+                $isAjax = isset($_SERVER['HTTP_X_CSRF_TOKEN']) 
+                    || (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false)
+                    || (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false);
+                
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    http_response_code(403);
+                    echo json_encode([
+                        'success' => false,
+                        'status' => 'error',
+                        'message' => 'CSRF verification failed. Please refresh your page.'
+                    ]);
+                    exit;
+                } else {
+                    flash('error', 'CSRF verification failed. Please try again.');
+                    redirect('dashboard');
+                }
+            }
+        }
+
         // 3. Check Session Timeout
         if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > SESSION_TIMEOUT)) {
             db_log('LOGOUT', 'Session timed out due to inactivity.', $_SESSION['user_id']);

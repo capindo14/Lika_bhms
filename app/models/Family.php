@@ -108,14 +108,14 @@ class Family {
             $stmt = $db->prepare("
                 INSERT INTO families (
                     family_no, head_resident_id, address, 
-                    occupation, educational_attainment, pregnancy_status, 
-                    family_planning_status, child_feeding_type, toilet_type, 
+                    occupation, educational_attainment, 
+                    family_planning_status, toilet_type, 
                     water_source, food_production_activity
                 )
                 VALUES (
                     :family_no, :head_resident_id, :address, 
-                    :occupation, :educational_attainment, :pregnancy_status, 
-                    :family_planning_status, :child_feeding_type, :toilet_type, 
+                    :occupation, :educational_attainment, 
+                    :family_planning_status, :toilet_type, 
                     :water_source, :food_production_activity
                 )
             ");
@@ -125,9 +125,7 @@ class Family {
                 ':address' => $data['address'],
                 ':occupation' => $data['occupation'] ?? null,
                 ':educational_attainment' => $data['educational_attainment'] ?? null,
-                ':pregnancy_status' => $data['pregnancy_status'] ?? null,
                 ':family_planning_status' => $data['family_planning_status'] ?? null,
-                ':child_feeding_type' => $data['child_feeding_type'] ?? null,
                 ':toilet_type' => $data['toilet_type'] ?? null,
                 ':water_source' => $data['water_source'] ?? null,
                 ':food_production_activity' => $data['food_production_activity'] ?? null
@@ -216,9 +214,7 @@ class Family {
                     address = :address,
                     occupation = :occupation,
                     educational_attainment = :educational_attainment,
-                    pregnancy_status = :pregnancy_status,
                     family_planning_status = :family_planning_status,
-                    child_feeding_type = :child_feeding_type,
                     toilet_type = :toilet_type,
                     water_source = :water_source,
                     food_production_activity = :food_production_activity
@@ -230,9 +226,7 @@ class Family {
                 ':address' => $data['address'],
                 ':occupation' => $data['occupation'] ?? null,
                 ':educational_attainment' => $data['educational_attainment'] ?? null,
-                ':pregnancy_status' => $data['pregnancy_status'] ?? null,
                 ':family_planning_status' => $data['family_planning_status'] ?? null,
-                ':child_feeding_type' => $data['child_feeding_type'] ?? null,
                 ':toilet_type' => $data['toilet_type'] ?? null,
                 ':water_source' => $data['water_source'] ?? null,
                 ':food_production_activity' => $data['food_production_activity'] ?? null

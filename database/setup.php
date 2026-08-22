@@ -110,7 +110,9 @@ try {
         ['MED-0003', 'BCG Vaccine', 'Tuberculosis vaccine for infants.', 'Vaccine', 50, 10],
         ['MED-0004', 'Hepatitis B Vaccine', 'Hepatitis B preventative vaccine.', 'Vaccine', 8, 15], // Low stock alert trigger
         ['MED-0005', 'Sterile Syringe 3ml', 'Disposable syringe for clinical injections.', 'Supply', 300, 30],
-        ['MED-0006', 'Adhesive Bandages (Band-Aid)', 'Supplies for minor wound dressing.', 'Supply', 500, 50]
+        ['MED-0006', 'Adhesive Bandages (Band-Aid)', 'Supplies for minor wound dressing.', 'Supply', 500, 50],
+        ['MED-0007', 'Oral Contraceptive Pills (Micropil)', 'Contraceptive pills for family planning.', 'Family Planning', 120, 20],
+        ['MED-0008', 'Condoms (Trust)', 'Barrier method contraception.', 'Family Planning', 300, 50]
     ];
 
     $stmtMed = $db->prepare("
@@ -135,16 +137,16 @@ try {
     echo "===========================================\n";
 
     $residents = [
-        ['RES-2026-0001', 'Juan', 'Perez', 'Dela Cruz', 'Male', '1985-04-12', 'Married', '09171234567', 'Sitio 2, Barangay Health Center', 1],
-        ['RES-2026-0002', 'Maria', 'Santos', 'Dela Cruz', 'Female', '1988-11-20', 'Married', '09187654321', 'Sitio 2, Barangay Health Center', 0],
-        ['RES-2026-0003', 'Pedrito', 'Santos', 'Dela Cruz', 'Male', '2023-05-15', 'Single', '', 'Sitio 2, Barangay Health Center', 0],
-        ['RES-2026-0004', 'Elizabeth', 'Gomez', 'Alvarez', 'Female', '1955-08-30', 'Widowed', '09228889999', 'Blk 5 Lot 2, Barangay Health Center', 1],
-        ['RES-2026-0005', 'Carlo', 'Rodriguez', 'Aquino', 'Male', '1995-02-28', 'Single', '09051112222', 'Sitio 4, Barangay Health Center', 1]
+        ['RES-2026-0001', 'Juan', 'Perez', 'Dela Cruz', 'Male', '1985-04-12', 'Married', '09171234567', 'Sitio 2, Barangay Health Center', 1, null, null],
+        ['RES-2026-0002', 'Maria', 'Santos', 'Dela Cruz', 'Female', '1988-11-20', 'Married', '09187654321', 'Sitio 2, Barangay Health Center', 0, 'Not Pregnant', null],
+        ['RES-2026-0003', 'Pedrito', 'Santos', 'Dela Cruz', 'Male', '2023-05-15', 'Single', '', 'Sitio 2, Barangay Health Center', 0, null, 'Breastfeeding'],
+        ['RES-2026-0004', 'Elizabeth', 'Gomez', 'Alvarez', 'Female', '1955-08-30', 'Widowed', '09228889999', 'Blk 5 Lot 2, Barangay Health Center', 1, 'Not Pregnant', null],
+        ['RES-2026-0005', 'Carlo', 'Rodriguez', 'Aquino', 'Male', '1995-02-28', 'Single', '09051112222', 'Sitio 4, Barangay Health Center', 1, null, null]
     ];
 
     $stmtRes = $db->prepare("
-        INSERT INTO residents (resident_id, first_name, middle_name, last_name, gender, birthdate, civil_status, contact_number, address, is_family_head, status)
-        VALUES (:resident_id, :first_name, :middle_name, :last_name, :gender, :birthdate, :civil_status, :contact_number, :address, :is_family_head, 'Active')
+        INSERT INTO residents (resident_id, first_name, middle_name, last_name, gender, birthdate, civil_status, contact_number, address, is_family_head, pregnancy_status, child_feeding_type, status)
+        VALUES (:resident_id, :first_name, :middle_name, :last_name, :gender, :birthdate, :civil_status, :contact_number, :address, :is_family_head, :pregnancy_status, :child_feeding_type, 'Active')
     ");
 
     foreach ($residents as $r) {
@@ -158,7 +160,9 @@ try {
             ':civil_status' => $r[6],
             ':contact_number' => $r[7],
             ':address' => $r[8],
-            ':is_family_head' => $r[9]
+            ':is_family_head' => $r[9],
+            ':pregnancy_status' => $r[10],
+            ':child_feeding_type' => $r[11]
         ]);
         echo " -> Resident registered: {$r[3]}, {$r[1]}\n";
     }
@@ -178,14 +182,14 @@ try {
     $db->prepare("
         INSERT INTO families (
             family_no, head_resident_id, address,
-            occupation, educational_attainment, pregnancy_status,
-            family_planning_status, child_feeding_type, toilet_type,
+            occupation, educational_attainment,
+            family_planning_status, toilet_type,
             water_source, food_production_activity
         )
         VALUES (
             'FAM-2026-0001', :head, 'Sitio 2, Barangay Health Center',
-            'Farmer', 'High School Graduate', 'Not Pregnant',
-            'Condom', 'N/A', 'Water-sealed (Flush)',
+            'Farmer', 'High School Graduate',
+            'Condom', 'Water-sealed (Flush)',
             'Piped Water', 'Backyard Gardening'
         )
     ")->execute([':head' => $resMap['RES-2026-0001']]);

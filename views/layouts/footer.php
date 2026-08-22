@@ -26,34 +26,19 @@
     <!-- Custom Main Application Script -->
     <script src="<?= url('js/app.js') ?>?v=<?= time() ?>"></script>
 
+    <?php if (isset($pageScript)): ?>
+        <script src="<?= $pageScript ?>?v=<?= time() ?>"></script>
+    <?php endif; ?>
+
     <!-- Toast message flash renderer -->
     <script>
         $(document).ready(function() {
-            // Flash messages using SweetAlert2 toast style
-            const Toast = Swal.mixin({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 4000,
-                timerProgressBar: true,
-                didOpen: (toast) => {
-                    toast.addEventListener('mouseenter', Swal.stopTimer)
-                    toast.addEventListener('mouseleave', Swal.resumeTimer)
-                }
-            });
-
             <?php if ($successMsg = flash('success')): ?>
-                Toast.fire({
-                    icon: 'success',
-                    title: '<?= escape(addslashes($successMsg)) ?>'
-                });
+                showToast('success', '<?= escape(addslashes($successMsg)) ?>');
             <?php endif; ?>
 
             <?php if ($errorMsg = flash('error')): ?>
-                Toast.fire({
-                    icon: 'error',
-                    title: '<?= escape(addslashes($errorMsg)) ?>'
-                });
+                showToast('error', '<?= escape(addslashes($errorMsg)) ?>');
             <?php endif; ?>
         });
     </script>

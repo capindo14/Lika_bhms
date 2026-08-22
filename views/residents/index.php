@@ -9,113 +9,83 @@ require_once LAYOUT_PATH . 'sidebar.php';
     <div class="container-fluid p-3 p-md-4">
         
         <!-- Header -->
-        <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between mb-4 gap-2">
-            <div>
-                <h3 class="fw-bold mb-1"><?= escape($pageTitle) ?></h3>
-                <p class="text-muted small mb-0">Manage profile data, health card identifiers, and household classifications.</p>
+        <div class="mb-4">
+            <h3 class="fw-bold mb-1"><?= escape($pageTitle) ?></h3>
+            <p class="text-muted small mb-0">Manage resident profiles, family heads, and consultation histories.</p>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs border-bottom mb-4" id="statusFilterTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold text-secondary" onclick="setStatusFilter('Active')" id="tabActive" type="button" role="tab">
+                    <i class="bi bi-person-badge-fill me-1"></i> Active Profiles
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold text-secondary" onclick="setStatusFilter('Pregnant')" id="tabPregnant" type="button" role="tab">
+                    <i class="bi bi-person-hearts me-1"></i> Pregnant
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold text-secondary" onclick="setStatusFilter('Infant')" id="tabInfant" type="button" role="tab">
+                    <i class="bi bi-baby me-1"></i> Infant Feeding
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold text-secondary" onclick="setStatusFilter('Archived')" id="tabArchived" type="button" role="tab">
+                    <i class="bi bi-archive me-1"></i> Archived
+                </button>
+            </li>
+        </ul>
+
+        <!-- Real-time Search Box and Action Buttons -->
+        <div class="row align-items-center mb-4 g-3">
+            <div class="col-12 col-md-5 col-lg-4">
+                <div class="input-group shadow-sm border rounded">
+                    <span class="input-group-text bg-white border-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="residentSearch" class="form-control border-0" placeholder="Search residents...">
+                </div>
             </div>
-            <div>
-                <?php if ($status === 'Active'): ?>
-                    <a href="<?= url('index.php?route=residents&status=Archived') ?>" class="btn btn-outline-secondary me-2">
-                        <i class="bi bi-archive-fill me-1"></i> Archived Profiles
-                    </a>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#registerResidentModal">
-                        <i class="bi bi-plus-lg me-1"></i> Register Resident
-                    </button>
-                <?php else: ?>
-                    <a href="<?= url('index.php?route=residents') ?>" class="btn btn-outline-primary">
-                        <i class="bi bi-arrow-left me-1"></i> Back to Directory
-                    </a>
-                <?php endif; ?>
+            <div class="col-12 col-md-3 col-lg-3" id="genderFilterCol">
+                <select id="genderFilter" class="form-select shadow-sm border rounded fw-semibold text-muted">
+                    <option value="">All Genders</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-4 col-lg-5 d-flex justify-content-md-end gap-2">
+                <button type="button" id="btnRegisterResident" class="btn btn-primary" onclick="newResident()">
+                    <i class="bi bi-plus-lg me-1"></i> Register Resident
+                </button>
             </div>
         </div>
 
-        <!-- DataTable Card -->
+        <!-- Directory Card -->
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
                 <div class="table-responsive">
-                    <table id="residents-table" class="table table-hover align-middle w-100">
+                    <table class="table table-hover align-middle w-100">
                         <thead class="table-light">
                             <tr>
                                 <th>Resident ID</th>
                                 <th>Name</th>
                                 <th>Gender</th>
-                                <th>Age</th>
+                                <th>Birthdate (Age)</th>
                                 <th>Civil Status</th>
-                                <th>Spouse & Family</th>
-                                <th>Contact</th>
                                 <th>Household Role</th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <?php foreach ($residents as $res): ?>
-                                <tr>
-                                    <td class="fw-bold text-primary"><?= escape($res['resident_id']) ?></td>
-                                    <td>
-                                        <div class="fw-semibold"><?= escape($res['last_name'] . ', ' . $res['first_name'] . ' ' . $res['middle_name']) ?></div>
-                                        <small class="text-muted text-truncate d-block" style="max-width: 200px;"><?= escape($res['address']) ?></small>
-                                    </td>
-                                    <td>
-                                        <?= gender_badge($res['gender']) ?>
-                                    </td>
-                                     <td><?= escape($res['age']) ?> yrs</td>
-                                     <td><?= escape($res['civil_status']) ?></td>
-                                     <td>
-                                         <?php if (!empty($res['family_id'])): ?>
-                                             <div class="small" style="font-size: 0.75rem; line-height: 1.3;">
-                                                 <?php if (!empty($res['spouse_id'])): 
-                                                     $spouseColorClass = $res['spouse_gender'] === 'Male' ? 'text-gender-male' : ($res['spouse_gender'] === 'Female' ? 'text-gender-female' : 'text-success');
-                                                 ?>
-                                                     <a href="#" onclick="viewResidentProfile(<?= (int)$res['spouse_id'] ?>); return false;" class="text-decoration-none fw-semibold <?= $spouseColorClass ?> d-block"><?= escape($res['spouse_name']) ?></a>
-                                                 <?php elseif ($res['civil_status'] === 'Married'): ?>
-                                                     <span class="text-muted d-block">No spouse linked</span>
-                                                 <?php endif; ?>
-                                                 <a href="<?= url("index.php?route=family") ?>" class="text-decoration-none text-muted d-block"><?= escape($res['family_no']) ?></a>
-                                             </div>
-                                         <?php elseif (!empty($res['spouse_id'])): 
-                                             $spouseColorClass = $res['spouse_gender'] === 'Male' ? 'text-gender-male' : ($res['spouse_gender'] === 'Female' ? 'text-gender-female' : 'text-success');
-                                         ?>
-                                             <div class="small" style="font-size: 0.75rem; line-height: 1.3;">
-                                                 <a href="#" onclick="viewResidentProfile(<?= (int)$res['spouse_id'] ?>); return false;" class="text-decoration-none fw-semibold <?= $spouseColorClass ?> d-block"><?= escape($res['spouse_name']) ?></a>
-                                             </div>
-                                         <?php elseif ($res['civil_status'] === 'Married'): ?>
-                                             <div class="small" style="font-size: 0.75rem; line-height: 1.3;">
-                                                 <span class="text-muted d-block">No spouse linked</span>
-                                             </div>
-                                         <?php else: ?>
-                                             <span class="text-muted small">-</span>
-                                         <?php endif; ?>
-                                     </td>
-                                     <td><?= escape($res['contact_number'] ?: 'N/A') ?></td>
-                                    <td>
-                                        <?php if ($res['is_family_head']): ?>
-                                            <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle">Family Head</span>
-                                        <?php else: ?>
-                                            <span class="badge bg-light text-muted border">Member</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="btn-group gap-1">
-                                            <button type="button" class="btn btn-outline-info btn-sm rounded-2" onclick="viewResidentProfile(<?= $res['id'] ?>)" title="View Profile">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-outline-primary btn-sm rounded-2" onclick="editResidentProfile(<?= $res['id'] ?>)" title="Edit Profile">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <?php if ($status === 'Active'): ?>
-                                                <button onclick="confirmArchive(<?= $res['id'] ?>, '<?= escape($res['first_name'] . ' ' . $res['last_name']) ?>')" class="btn btn-outline-warning btn-sm rounded-2" title="Archive Profile">
-                                                    <i class="bi bi-archive"></i>
-                                                </button>
-                                            <?php else: ?>
-                                                <button onclick="confirmRestore(<?= $res['id'] ?>, '<?= escape($res['first_name'] . ' ' . $res['last_name']) ?>')" class="btn btn-outline-success btn-sm rounded-2" title="Restore Profile">
-                                                    <i class="bi bi-arrow-counterclockwise"></i>
-                                                </button>
-                                            <?php endif; ?>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
+                        <tbody id="residentTable">
+                            <tr>
+                                <td colspan="7" class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <div class="text-muted mt-2 small">Loading resident list...</div>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -125,188 +95,204 @@ require_once LAYOUT_PATH . 'sidebar.php';
     </div>
 </div>
 
-<!-- Register Resident Modal -->
-<div class="modal fade" id="registerResidentModal" tabindex="-1" aria-labelledby="registerResidentModalLabel" aria-hidden="true">
+<!-- Add/Edit Resident Modal -->
+<div class="modal fade" id="residentModal" tabindex="-1" aria-labelledby="residentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <form action="<?= url('index.php?route=residents/store') ?>" method="POST" class="modal-content border-0 shadow needs-validation" novalidate id="register-resident-form">
+        <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-primary bg-gradient text-white">
-                <h5 class="modal-title fw-bold" id="registerResidentModalLabel">
-                    <i class="bi bi-person-plus-fill me-2"></i>Register New Resident
+                <h5 class="modal-title fw-bold" id="residentModalLabel">
+                    <i class="bi bi-person-plus-fill me-2"></i><span id="modalTitleText">Register Resident</span>
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-4">
-                <?= csrf_field() ?>
-
-                <div class="row g-3">
-                    <!-- First Name -->
-                    <div class="col-12 col-md-4">
-                        <label for="modal_first_name" class="form-label fw-semibold small">First Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="modal_first_name" name="first_name" required placeholder="Enter first name">
-                        <div class="invalid-feedback">First name is required.</div>
-                    </div>
-
-                    <!-- Middle Name -->
-                    <div class="col-12 col-md-4">
-                        <label for="modal_middle_name" class="form-label fw-semibold small">Middle Name</label>
-                        <input type="text" class="form-control" id="modal_middle_name" name="middle_name" placeholder="Enter middle name">
-                    </div>
-
-                    <!-- Last Name -->
-                    <div class="col-12 col-md-4">
-                        <label for="modal_last_name" class="form-label fw-semibold small">Last Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="modal_last_name" name="last_name" required placeholder="Enter last name">
-                        <div class="invalid-feedback">Last name is required.</div>
-                    </div>
-
-                    <!-- Gender -->
-                    <div class="col-12 col-md-4">
-                        <label for="modal_gender" class="form-label fw-semibold small">Gender <span class="text-danger">*</span></label>
-                        <select class="form-select" id="modal_gender" name="gender" required>
-                            <option value="" selected disabled>Select Gender</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                        </select>
-                        <div class="invalid-feedback">Please select a gender.</div>
-                    </div>
-
-                    <!-- Birthdate -->
-                    <div class="col-12 col-md-4">
-                        <label for="modal_birthdate" class="form-label fw-semibold small">Birthdate <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light"><i class="bi bi-calendar-event"></i></span>
-                            <input type="text" class="form-control birthdate-picker" id="modal_birthdate" name="birthdate" required placeholder="YYYY-MM-DD">
+            <form id="residentForm" class="needs-validation" novalidate>
+                <input type="hidden" id="residentId" name="id">
+                
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <!-- First Name -->
+                        <div class="col-12 col-md-4 standard-details-field">
+                            <label for="resFirstName" class="form-label fw-semibold small">First Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="resFirstName" name="first_name" required placeholder="Enter first name">
+                            <div class="invalid-feedback">First name is required.</div>
                         </div>
-                        <div class="invalid-feedback">Please enter a valid birthdate.</div>
-                    </div>
 
-                    <!-- Civil Status -->
-                    <div class="col-12 col-md-4">
-                        <label for="modal_civil_status" class="form-label fw-semibold small">Civil Status <span class="text-danger">*</span></label>
-                        <select class="form-select" id="modal_civil_status" name="civil_status" required>
-                            <option value="" selected disabled>Select Civil Status</option>
-                            <option value="Single">Single</option>
-                            <option value="Married">Married</option>
-                            <option value="Widowed">Widowed</option>
-                            <option value="Divorced">Divorced</option>
-                        </select>
-                        <div class="invalid-feedback">Please select civil status.</div>
-                    </div>
+                        <!-- Middle Name -->
+                        <div class="col-12 col-md-4 standard-details-field">
+                            <label for="resMiddleName" class="form-label fw-semibold small">Middle Name</label>
+                            <input type="text" class="form-control" id="resMiddleName" name="middle_name" placeholder="Enter middle name">
+                        </div>
 
-                    <!-- Contact Number -->
-                    <div class="col-12 col-md-6">
-                        <label for="modal_contact_number" class="form-label fw-semibold small">Contact Number</label>
-                        <input type="text" class="form-control" id="modal_contact_number" name="contact_number" placeholder="e.g. 09171234567" pattern="^(09|\+639)\d{9}$">
-                        <small class="text-muted d-block mt-1">Format: 11 digit mobile number starting with 09.</small>
-                        <div class="invalid-feedback">Please enter a valid Philippine mobile number.</div>
-                    </div>
+                        <!-- Last Name -->
+                        <div class="col-12 col-md-4 standard-details-field">
+                            <label for="resLastName" class="form-label fw-semibold small">Last Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="resLastName" name="last_name" required placeholder="Enter last name">
+                            <div class="invalid-feedback">Last name is required.</div>
+                        </div>
 
-                    <!-- Barangay -->
-                    <div class="col-12 col-md-6">
-                        <label for="modal_barangay" class="form-label fw-semibold small">Barangay Center Jurisdiction <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="modal_barangay" name="barangay" value="Barangay Health Center" required>
-                        <div class="invalid-feedback">Please input Barangay.</div>
-                    </div>
+                        <!-- Gender -->
+                        <div class="col-12 col-md-4 standard-details-field">
+                            <label for="resGender" class="form-label fw-semibold small">Gender <span class="text-danger">*</span></label>
+                            <select class="form-select" id="resGender" name="gender" required>
+                                <option value="" selected disabled>Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <div class="invalid-feedback">Please select a gender.</div>
+                        </div>
 
-                    <!-- Complete Address -->
-                    <div class="col-12">
-                        <label for="modal_address" class="form-label fw-semibold small">Complete Address <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="modal_address" name="address" rows="2" required placeholder="Street name, block, lot, zone/sitio..."></textarea>
-                        <div class="invalid-feedback">Complete address is required.</div>
-                    </div>
+                        <!-- Birthdate -->
+                        <div class="col-12 col-md-4 standard-details-field">
+                            <label for="resBirthdate" class="form-label fw-semibold small">Birthdate <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-calendar-event"></i></span>
+                                <input type="text" class="form-control birthdate-picker" id="resBirthdate" name="birthdate" required placeholder="YYYY-MM-DD">
+                            </div>
+                            <div class="invalid-feedback">Please enter a valid birthdate.</div>
+                        </div>
 
-                    <!-- Family Head Designation -->
-                    <div class="col-12">
-                        <div class="form-check form-switch p-3 border rounded-3 bg-light bg-opacity-50">
-                            <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" id="modal_is_family_head" name="is_family_head" value="1">
-                            <label class="form-check-label fw-semibold small" for="modal_is_family_head">Designate as Family Head</label>
-                            <span class="d-block text-muted small mt-1">If active, this resident can be referenced as the family head when building Family Profiles.</span>
+                        <!-- Civil Status -->
+                        <div class="col-12 col-md-4 standard-details-field">
+                            <label for="resCivilStatus" class="form-label fw-semibold small">Civil Status <span class="text-danger">*</span></label>
+                            <select class="form-select" id="resCivilStatus" name="civil_status" required>
+                                <option value="" selected disabled>Select Civil Status</option>
+                                <option value="Single">Single</option>
+                                <option value="Married">Married</option>
+                                <option value="Widowed">Widowed</option>
+                                <option value="Divorced">Divorced</option>
+                            </select>
+                            <div class="invalid-feedback">Please select civil status.</div>
+                        </div>
+
+                        <!-- Contact Number -->
+                        <div class="col-12 col-md-6 standard-details-field">
+                            <label for="resContactNumber" class="form-label fw-semibold small">Contact Number</label>
+                            <input type="text" class="form-control" id="resContactNumber" name="contact_number" placeholder="e.g. 09171234567" pattern="^(09|\+639)\d{9}$">
+                            <small class="text-muted d-block mt-1">11 digit starting with 09.</small>
+                            <div class="invalid-feedback">Enter a valid 11-digit mobile number.</div>
+                        </div>
+
+                        <!-- Complete Address -->
+                        <div class="col-12 standard-details-field">
+                            <label for="resAddress" class="form-label fw-semibold small">Complete Address <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="resAddress" name="address" rows="2" required placeholder="Street name, zone/sitio..."></textarea>
+                            <div class="invalid-feedback">Complete address is required.</div>
+                        </div>
+
+                        <!-- Pregnancy Status (Only applicable to Female) -->
+                        <div class="col-12 col-md-6" id="resPregnancyContainer" style="display: none;">
+                            <label for="resPregnancy" class="form-label fw-semibold small">Pregnancy Status <span class="badge bg-danger-subtle text-danger ms-1">Female</span></label>
+                            <select class="form-select" id="resPregnancy" name="pregnancy_status">
+                                <option value="Not Pregnant" selected>Not Pregnant</option>
+                                <option value="Pregnant">Pregnant</option>
+                                <option value="N/A" style="display: none;">N/A</option>
+                            </select>
+                        </div>
+
+                        <!-- Child Feeding Type (Only applicable to Children < 5 yrs) -->
+                        <div class="col-12 col-md-6" id="resFeedingContainer" style="display: none;">
+                            <label for="resFeeding" class="form-label fw-semibold small">Child Feeding Type <span class="badge bg-info-subtle text-info ms-1">Child (< 5 yrs)</span></label>
+                            <select class="form-select" id="resFeeding" name="child_feeding_type">
+                                <option value="" selected disabled>Select feeding type...</option>
+                                <option value="Exclusive Breastfeeding">Exclusive Breastfeeding</option>
+                                <option value="Mixed Feeding">Mixed Feeding (Breastmilk + Formula)</option>
+                                <option value="Formula Feeding">Formula Feeding</option>
+                                <option value="Complementary Feeding">Complementary Feeding</option>
+                                <option value="N/A">N/A</option>
+                            </select>
+                        </div>
+
+                        <!-- Family Head Designation -->
+                        <div class="col-12 standard-details-field">
+                            <div class="form-check form-switch p-3 border rounded-3 bg-light bg-opacity-50">
+                                <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" id="resIsFamilyHead" name="is_family_head" value="1">
+                                <label class="form-check-label fw-semibold small" for="resIsFamilyHead">Designate as Family Head</label>
+                                <span class="d-block text-muted small mt-1">If enabled, this resident will be available as family head in profiles.</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer bg-light px-4 py-3">
-                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-primary px-4">Register Resident</button>
-            </div>
-        </form>
+                <div class="modal-footer bg-light px-4 py-3">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4" id="saveButton">Save Profile</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
-<!-- View Resident Profile Modal -->
+<!-- View Resident Profile Details Modal -->
 <div class="modal fade" id="viewResidentModal" tabindex="-1" aria-labelledby="viewResidentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-info bg-gradient text-white">
                 <h5 class="modal-title fw-bold" id="viewResidentModalLabel">
-                    <i class="bi bi-person-bounding-box me-2"></i>Resident Profile Overview
+                    <i class="bi bi-person-badge-fill me-2"></i>Resident Details
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4">
-                <!-- Resident Details Summary Card -->
-                <div class="d-flex align-items-center justify-content-between p-3 border rounded bg-light mb-4">
-                    <div>
-                        <h4 class="fw-bold mb-1 text-dark" id="view-res-name">Loading...</h4>
-                        <div class="d-flex align-items-center gap-2 flex-wrap">
-                            <span class="badge bg-primary px-2.5 py-1.5" id="view-res-code">---</span>
-                            <span id="view-res-gender-badge">---</span>
-                            <span class="badge bg-secondary bg-opacity-10 text-secondary border px-2.5 py-1.5" id="view-res-age">-- yrs</span>
-                            <span id="view-res-head-badge"></span>
-                        </div>
-                    </div>
-                </div>
-
+                <!-- Profile details -->
                 <div class="row g-3 mb-4">
-                    <div class="col-12 col-md-4">
-                        <small class="text-muted d-block">Birthdate</small>
-                        <div class="fw-semibold text-dark" id="view-res-birthdate">---</div>
+                    <div class="col-12 col-md-6">
+                        <span class="text-muted small d-block">Full Name</span>
+                        <strong id="viewResFullName" class="fs-5 text-dark"></strong>
+                        <div class="mt-1" id="viewResBadges"></div>
                     </div>
-                    <div class="col-12 col-md-4">
-                        <small class="text-muted d-block">Civil Status</small>
-                        <div class="fw-semibold text-dark" id="view-res-civil">---</div>
+                    <div class="col-12 col-md-6 text-md-end">
+                        <span class="text-muted small d-block">Resident Code</span>
+                        <strong id="viewResCode" class="text-primary font-monospace"></strong>
                     </div>
-                    <div class="col-12 col-md-4">
-                        <small class="text-muted d-block">Contact Number</small>
-                        <div class="fw-semibold text-dark" id="view-res-contact">---</div>
+                    <div class="col-12"><hr class="my-1"></div>
+                    <div class="col-6 col-md-4">
+                        <span class="text-muted small d-block">Age / Birthdate</span>
+                        <span id="viewResAgeBirthdate" class="fw-semibold text-dark"></span>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <span class="text-muted small d-block">Civil Status</span>
+                        <span id="viewResCivilStatus" class="fw-semibold text-dark"></span>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <span class="text-muted small d-block">Contact Number</span>
+                        <span id="viewResContact" class="fw-semibold text-dark"></span>
+                    </div>
+                    <div class="col-6 col-md-6" id="viewResPregnancyContainer">
+                        <span class="text-muted small d-block">Pregnancy Status</span>
+                        <span id="viewResPregnancy" class="fw-semibold text-dark">N/A</span>
+                    </div>
+                    <div class="col-6 col-md-6" id="viewResFeedingContainer">
+                        <span class="text-muted small d-block">Child Feeding Type</span>
+                        <span id="viewResFeeding" class="fw-semibold text-dark">N/A</span>
                     </div>
                     <div class="col-12">
-                        <small class="text-muted d-block">Full Residential Address</small>
-                        <div class="p-2 border rounded bg-light fw-medium text-dark" id="view-res-address">---</div>
-                    </div>
-                    <div class="col-12" id="view-res-family-section" style="display:none;">
-                        <small class="text-muted d-block">Linked Family Profile</small>
-                        <div class="p-2 border border-success-subtle rounded bg-success bg-opacity-10 fw-medium text-success">
-                            <i class="bi bi-house-door-fill me-1"></i>
-                            <a href="#" id="view-res-family-link" class="text-success text-decoration-none fw-bold">---</a>
-                            <span class="text-muted small ms-1">(Relationship: <span id="view-res-family-rel" class="fw-semibold">---</span>)</span>
-                        </div>
+                        <span class="text-muted small d-block">Complete Address</span>
+                        <span id="viewResAddress" class="fw-semibold text-dark"></span>
                     </div>
                 </div>
 
-                <!-- History Nav Tabs -->
-                <ul class="nav nav-tabs border-bottom mb-3" role="tablist">
-                    <li class="nav-item">
-                        <button class="nav-link active fw-bold small py-2" id="res-con-tab" data-bs-toggle="tab" data-bs-target="#res-con-pane" type="button" role="tab">
-                            <i class="bi bi-clipboard2-pulse me-1"></i> Consultations (<span id="view-res-con-count">0</span>)
+                <!-- History Tabs -->
+                <ul class="nav nav-tabs border-bottom mb-3" id="historyTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active fw-bold text-secondary" id="con-tab" data-bs-toggle="tab" data-bs-target="#con-pane" type="button" role="tab">
+                            <i class="bi bi-clipboard2-pulse me-1"></i> Consultations (<span id="viewResConCount">0</span>)
                         </button>
                     </li>
-                    <li class="nav-item">
-                        <button class="nav-link fw-bold small py-2" id="res-imm-tab" data-bs-toggle="tab" data-bs-target="#res-imm-pane" type="button" role="tab">
-                            <i class="bi bi-shield-plus me-1"></i> Immunizations (<span id="view-res-imm-count">0</span>)
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-bold text-secondary" id="imm-tab" data-bs-toggle="tab" data-bs-target="#imm-pane" type="button" role="tab">
+                            <i class="bi bi-shield-plus me-1"></i> Immunizations (<span id="viewResImmCount">0</span>)
                         </button>
                     </li>
                 </ul>
 
-                <div class="tab-content">
-                    <div class="tab-pane fade show active" id="res-con-pane" role="tabpanel">
-                        <div id="view-res-con-list">
+                <div class="tab-content" id="historyTabsContent">
+                    <div class="tab-pane fade show active" id="con-pane" role="tabpanel">
+                        <div id="viewResConList" style="max-height: 200px; overflow-y: auto;">
                             <!-- Populated dynamically -->
                         </div>
                     </div>
-                    <div class="tab-pane fade" id="res-imm-pane" role="tabpanel">
-                        <div id="view-res-imm-list">
+                    <div class="tab-pane fade" id="imm-pane" role="tabpanel">
+                        <div id="viewResImmList" style="max-height: 200px; overflow-y: auto;">
                             <!-- Populated dynamically -->
                         </div>
                     </div>
@@ -319,332 +305,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
     </div>
 </div>
 
-<!-- Edit Resident Profile Modal -->
-<div class="modal fade" id="editResidentModal" tabindex="-1" aria-labelledby="editResidentModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <form action="<?= url('index.php?route=residents/update') ?>" method="POST" class="modal-content border-0 shadow needs-validation" novalidate id="edit-resident-form">
-            <div class="modal-header bg-primary bg-gradient text-white">
-                <h5 class="modal-title fw-bold" id="editResidentModalLabel">
-                    <i class="bi bi-pencil-square me-2"></i>Edit Resident Profile
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <?= csrf_field() ?>
-                <input type="hidden" id="edit_resident_id" name="id">
-
-                <div class="row g-3">
-                    <!-- First Name -->
-                    <div class="col-12 col-md-4">
-                        <label for="edit_first_name" class="form-label fw-semibold small">First Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="edit_first_name" name="first_name" required placeholder="Enter first name">
-                        <div class="invalid-feedback">First name is required.</div>
-                    </div>
-
-                    <!-- Middle Name -->
-                    <div class="col-12 col-md-4">
-                        <label for="edit_middle_name" class="form-label fw-semibold small">Middle Name</label>
-                        <input type="text" class="form-control" id="edit_middle_name" name="middle_name" placeholder="Enter middle name">
-                    </div>
-
-                    <!-- Last Name -->
-                    <div class="col-12 col-md-4">
-                        <label for="edit_last_name" class="form-label fw-semibold small">Last Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="edit_last_name" name="last_name" required placeholder="Enter last name">
-                        <div class="invalid-feedback">Last name is required.</div>
-                    </div>
-
-                    <!-- Gender -->
-                    <div class="col-12 col-md-4">
-                        <label for="edit_gender" class="form-label fw-semibold small">Gender <span class="text-danger">*</span></label>
-                        <select class="form-select" id="edit_gender" name="gender" required>
-                            <option value="" disabled>Select Gender</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                        </select>
-                        <div class="invalid-feedback">Please select a gender.</div>
-                    </div>
-
-                    <!-- Birthdate -->
-                    <div class="col-12 col-md-4">
-                        <label for="edit_birthdate" class="form-label fw-semibold small">Birthdate <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light"><i class="bi bi-calendar-event"></i></span>
-                            <input type="text" class="form-control birthdate-picker" id="edit_birthdate" name="birthdate" required placeholder="YYYY-MM-DD">
-                        </div>
-                        <div class="invalid-feedback">Please enter a valid birthdate.</div>
-                    </div>
-
-                    <!-- Civil Status -->
-                    <div class="col-12 col-md-4">
-                        <label for="edit_civil_status" class="form-label fw-semibold small">Civil Status <span class="text-danger">*</span></label>
-                        <select class="form-select" id="edit_civil_status" name="civil_status" required>
-                            <option value="" disabled>Select Civil Status</option>
-                            <option value="Single">Single</option>
-                            <option value="Married">Married</option>
-                            <option value="Widowed">Widowed</option>
-                            <option value="Divorced">Divorced</option>
-                        </select>
-                        <div class="invalid-feedback">Please select civil status.</div>
-                    </div>
-
-                    <!-- Contact Number -->
-                    <div class="col-12 col-md-6">
-                        <label for="edit_contact_number" class="form-label fw-semibold small">Contact Number</label>
-                        <input type="text" class="form-control" id="edit_contact_number" name="contact_number" placeholder="e.g. 09171234567" pattern="^(09|\+639)\d{9}$">
-                        <small class="text-muted d-block mt-1">Format: 11 digit mobile number starting with 09.</small>
-                        <div class="invalid-feedback">Please enter a valid Philippine mobile number.</div>
-                    </div>
-
-                    <!-- Barangay -->
-                    <div class="col-12 col-md-6">
-                        <label for="edit_barangay" class="form-label fw-semibold small">Barangay Center Jurisdiction <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="edit_barangay" name="barangay" required placeholder="Enter Barangay Center">
-                        <div class="invalid-feedback">Please input Barangay.</div>
-                    </div>
-
-                    <!-- Complete Address -->
-                    <div class="col-12">
-                        <label for="edit_address" class="form-label fw-semibold small">Complete Address <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="edit_address" name="address" rows="2" required placeholder="Street name, block, lot, zone/sitio..."></textarea>
-                        <div class="invalid-feedback">Complete address is required.</div>
-                    </div>
-
-                    <!-- Family Head Designation -->
-                    <div class="col-12">
-                        <div class="form-check form-switch p-3 border rounded-3 bg-light bg-opacity-50">
-                            <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" id="edit_is_family_head" name="is_family_head" value="1">
-                            <label class="form-check-label fw-semibold small" for="edit_is_family_head">Designate as Family Head</label>
-                            <span class="d-block text-muted small mt-1">If active, this resident can be referenced as the family head when building Family Profiles.</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer bg-light px-4 py-3">
-                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-primary px-4">Update Profile</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<?php require_once LAYOUT_PATH . 'footer.php'; ?>
-
-<script>
-function escapeHtml(text) {
-    if (text === null || text === undefined) return '';
-    return text.toString()
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
-
-$(document).ready(function() {
-    $('#residents-table').DataTable({
-        responsive: true,
-        order: [[1, 'asc']], // Sort by Name
-        columnDefs: [
-            { orderable: false, targets: [5, 8] } // Disable ordering on Spouse & Family and Actions columns
-        ]
-    });
-
-    $('#editResidentModal').on('shown.bs.modal', function () {
-        App.initBirthdatePicker('#edit_birthdate');
-    });
-});
-
-function viewResidentProfile(id) {
-    App.showLoader();
-    $.getJSON(`index.php?route=residents/detail_json&id=${id}`)
-        .done(function(res) {
-            App.hideLoader();
-            if (res.success) {
-                const r = res.data.resident;
-                const cons = res.data.consultations || [];
-                const imms = res.data.immunizations || [];
-
-                $('#view-res-name').text(`${r.last_name}, ${r.first_name} ${r.middle_name || ''}`);
-                $('#view-res-code').text(r.resident_id);
-                $('#view-res-age').text(`${r.age} yrs`);
-                $('#view-res-birthdate').text(r.birthdate);
-                
-                // Civil Status with spouse details
-                let civilHtml = escapeHtml(r.civil_status);
-                if (r.spouse_id) {
-                    const spouseColorClass = r.spouse_gender === 'Male' ? 'text-gender-male' : (r.spouse_gender === 'Female' ? 'text-gender-female' : 'text-danger');
-                    civilHtml += ` <br><span class="small text-muted">Spouse: <a href="#" onclick="bootstrap.Modal.getInstance(document.getElementById('viewResidentModal')).hide(); setTimeout(() => viewResidentProfile(${parseInt(r.spouse_id)}), 400); return false;" class="text-decoration-none fw-semibold ${spouseColorClass}"><i class="bi bi-heart-fill text-danger me-1"></i>${escapeHtml(r.spouse_name)}</a></span>`;
-                } else if (r.civil_status === 'Married') {
-                    civilHtml += ` <br><span class="small text-muted"><i class="bi bi-heart-break text-warning me-1"></i>No spouse linked</span>`;
-                }
-                $('#view-res-civil').html(civilHtml);
-
-                $('#view-res-contact').text(r.contact_number || 'N/A');
-                $('#view-res-address').text(r.address);
-
-                // Family Profile link
-                if (r.family_id) {
-                    $('#view-res-family-link')
-                        .attr('href', `index.php?route=family`)
-                        .text(r.family_no);
-                    $('#view-res-family-rel').text(r.relationship_to_head || 'Member');
-                    $('#view-res-family-section').show();
-                } else {
-                    $('#view-res-family-section').hide();
-                }
-
-                // Badges
-                const gBadge = r.gender === 'Male' 
-                    ? '<span class="badge badge-gender-male"><i class="bi bi-gender-male me-1"></i> Male</span>'
-                    : (r.gender === 'Female' ? '<span class="badge badge-gender-female"><i class="bi bi-gender-female me-1"></i> Female</span>' : '<span class="badge badge-gender-other"><i class="bi bi-gender-ambiguous me-1"></i> Other</span>');
-                $('#view-res-gender-badge').html(gBadge);
-
-                if (parseInt(r.is_family_head) === 1) {
-                    $('#view-res-head-badge').html('<span class="badge bg-success bg-opacity-10 text-success border border-success-subtle">Family Head</span>');
-                } else {
-                    $('#view-res-head-badge').html('<span class="badge bg-light text-muted border">Member</span>');
-                }
-
-                // Consultations count & list
-                $('#view-res-con-count').text(cons.length);
-                if (cons.length === 0) {
-                    $('#view-res-con-list').html('<div class="text-muted text-center py-3 small">No consultation history recorded for this resident.</div>');
-                } else {
-                    let conHtml = '<div class="list-group list-group-flush">';
-                    cons.forEach(c => {
-                        conHtml += `
-                            <div class="list-group-item px-0 py-2">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <strong class="text-dark small">${c.diagnosis}</strong>
-                                    <span class="small text-muted">${c.consultation_date}</span>
-                                </div>
-                                <div class="small text-muted">Symptoms: ${c.symptoms}</div>
-                                <div class="small text-secondary">Worker: ${c.worker_name} ${c.medicine_name ? '• Medicine: ' + c.medicine_name : ''}</div>
-                            </div>
-                        `;
-                    });
-                    conHtml += '</div>';
-                    $('#view-res-con-list').html(conHtml);
-                }
-
-                // Immunizations count & list
-                $('#view-res-imm-count').text(imms.length);
-                if (imms.length === 0) {
-                    $('#view-res-imm-list').html('<div class="text-muted text-center py-3 small">No immunization records recorded for this resident.</div>');
-                } else {
-                    let immHtml = '<div class="list-group list-group-flush">';
-                    imms.forEach(i => {
-                        immHtml += `
-                            <div class="list-group-item px-0 py-2">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <strong class="text-dark small">${i.vaccine_name} (${i.dose})</strong>
-                                    <span class="badge bg-${i.status === 'Completed' ? 'success' : 'warning'} bg-opacity-10 text-${i.status === 'Completed' ? 'success' : 'warning'}">${i.status}</span>
-                                </div>
-                                <div class="small text-muted">Date: ${i.date_given || 'Scheduled: ' + i.next_schedule}</div>
-                            </div>
-                        `;
-                    });
-                    immHtml += '</div>';
-                    $('#view-res-imm-list').html(immHtml);
-                }
-
-                const myModal = new bootstrap.Modal(document.getElementById('viewResidentModal'));
-                myModal.show();
-            } else {
-                Swal.fire('Error', res.message || 'Unable to fetch resident details.', 'error');
-            }
-        })
-        .fail(function() {
-            App.hideLoader();
-            Swal.fire('Error', 'Communication error happened.', 'error');
-        });
-}
-
-function editResidentProfile(id) {
-    App.showLoader();
-    $.getJSON(`index.php?route=residents/detail_json&id=${id}`)
-        .done(function(res) {
-            App.hideLoader();
-            if (res.success) {
-                const r = res.data.resident;
-                $('#edit_resident_id').val(r.id);
-                $('#edit_first_name').val(r.first_name);
-                $('#edit_middle_name').val(r.middle_name);
-                $('#edit_last_name').val(r.last_name);
-                $('#edit_gender').val(r.gender);
-                $('#edit_birthdate').val(r.birthdate);
-                $('#edit_civil_status').val(r.civil_status);
-                $('#edit_contact_number').val(r.contact_number);
-                $('#edit_barangay').val(r.barangay);
-                $('#edit_address').val(r.address);
-                $('#edit_is_family_head').prop('checked', parseInt(r.is_family_head) === 1);
-
-                const myModal = new bootstrap.Modal(document.getElementById('editResidentModal'));
-                myModal.show();
-            } else {
-                Swal.fire('Error', res.message || 'Unable to fetch resident details.', 'error');
-            }
-        })
-        .fail(function() {
-            App.hideLoader();
-            Swal.fire('Error', 'Communication error happened.', 'error');
-        });
-}
-
-function confirmArchive(id, name) {
-    Swal.fire({
-        title: 'Archive Resident?',
-        text: `Are you sure you want to archive the profile of ${name}?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#10b981', // green
-        cancelButtonColor: '#ef4444', // red
-        confirmButtonText: 'Yes, Archive'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            window.location.href = `index.php?route=residents/archive&id=${id}`;
-        }
-    });
-}
-
-function confirmRestore(id, name) {
-    Swal.fire({
-        title: 'Restore Resident?',
-        text: `Are you sure you want to restore the profile of ${name}?`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#10b981', // emerald-500
-        cancelButtonColor: '#64748b',
-        confirmButtonText: 'Yes, Restore'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            window.location.href = `index.php?route=residents/restore&id=${id}`;
-        }
-    });
-}
-
-// Re-initialize Flatpickr inside Register Modal when opened
-$('#registerResidentModal').on('shown.bs.modal', function () {
-    App.initBirthdatePicker('#modal_birthdate');
-});
-
-// Bootstrap client-side validation for modal forms
-(function () {
-  'use strict'
-  var forms = document.querySelectorAll('#register-resident-form, #edit-resident-form')
-  Array.prototype.slice.call(forms)
-    .forEach(function (form) {
-      form.addEventListener('submit', function (event) {
-        if (!form.checkValidity()) {
-          event.preventDefault()
-          event.stopPropagation()
-        } else {
-            App.showLoader();
-        }
-        form.classList.add('was-validated')
-      }, false)
-    })
-})()
-</script>
+<?php 
+$pageScript = url('js/residents_js.js');
+require_once LAYOUT_PATH . 'footer.php'; 
+?>

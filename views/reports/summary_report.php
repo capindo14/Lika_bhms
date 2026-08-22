@@ -114,8 +114,8 @@ require_once LAYOUT_PATH . 'sidebar.php';
                 <div class="card h-100 border-0 shadow-sm p-3 d-flex flex-column justify-content-between">
                     <div>
                         <div class="text-success fs-3 mb-2"><i class="bi bi-capsule"></i></div>
-                        <h6 class="fw-bold text-dark mb-1 small">Medicine Allocations</h6>
-                        <p class="text-muted mb-3" style="font-size: 0.78rem; line-height: 1.3;">Monitor distributed stock items, tracking quantities given to individual patients.</p>
+                        <h6 class="fw-bold text-dark mb-1 small">Medicine & Family Planning</h6>
+                        <p class="text-muted mb-3" style="font-size: 0.78rem; line-height: 1.3;">Monitor distributed stock items and family planning supplies, tracking quantities given to individual patients.</p>
                     </div>
                     <a href="<?= url('index.php?route=reports/medicine') ?>" class="btn btn-outline-primary w-100 btn-sm rounded-2 py-1.5 fw-medium">Generate Report</a>
                 </div>

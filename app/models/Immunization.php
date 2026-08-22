@@ -307,10 +307,18 @@ class Immunization {
         $stmt = $db->prepare("
             SELECT MONTH(COALESCE(date_given, next_schedule)) as month, COUNT(*) as count 
             FROM immunizations 
-            WHERE YEAR(COALESCE(date_given, next_schedule)) = :year AND deleted_at IS NULL
+            WHERE (
+                (date_given >= :start_date_1 AND date_given <= :end_date_1)
+                OR (date_given IS NULL AND next_schedule >= :start_date_2 AND next_schedule <= :end_date_2)
+            ) AND deleted_at IS NULL
             GROUP BY MONTH(COALESCE(date_given, next_schedule))
         ");
-        $stmt->execute([':year' => $year]);
+        $stmt->execute([
+            ':start_date_1' => $year . '-01-01',
+            ':end_date_1' => $year . '-12-31',
+            ':start_date_2' => $year . '-01-01',
+            ':end_date_2' => $year . '-12-31'
+        ]);
         $rows = $stmt->fetchAll();
         
         $counts = array_fill(1, 12, 0);

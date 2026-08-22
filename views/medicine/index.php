@@ -9,124 +9,93 @@ require_once LAYOUT_PATH . 'sidebar.php';
     <div class="container-fluid p-3 p-md-4">
         
         <!-- Header -->
-        <div class="d-flex align-items-center justify-content-between mb-4">
-            <div>
-                <h3 class="fw-bold mb-1"><?= escape($pageTitle) ?></h3>
-                <p class="text-muted small mb-0">Monitor active pharmaceutical inventory, vaccines, medical supplies, and distribution logs.</p>
-            </div>
-            <div>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMedicineModal">
-                    <i class="bi bi-plus-lg me-1"></i> Add Inventory Item
-                </button>
-            </div>
+        <div class="mb-4">
+            <h3 class="fw-bold mb-1"><?= escape($pageTitle) ?></h3>
+            <p class="text-muted small mb-0">Manage medicine and family planning inventory dynamically.</p>
         </div>
 
-        <!-- Low Stock Alerts Panel -->
-        <?php if (!empty($lowStockAlerts)): ?>
-            <div class="card border-0 shadow-sm mb-4 border-start border-4 border-warning">
-                <div class="card-header bg-transparent border-0 pt-3 px-4">
-                    <h6 class="fw-bold text-warning mb-0"><i class="bi bi-exclamation-triangle-fill me-2"></i>Reorder Alerts (Low Stock)</h6>
-                </div>
-                <div class="card-body px-4 pb-3 pt-1">
-                    <div class="row g-2">
-                        <?php foreach ($lowStockAlerts as $item): ?>
-                            <div class="col-12 col-md-4">
-                                <div class="p-2 border rounded bg-light d-flex align-items-center justify-content-between">
-                                    <div>
-                                        <span class="fw-bold small d-block"><?= escape($item['name']) ?></span>
-                                        <small class="text-muted">Code: <?= escape($item['code']) ?> • Reorder Limit: <?= $item['reorder_level'] ?></small>
-                                    </div>
-                                    <span class="badge bg-danger px-2.5 py-1.5 rounded-pill"><?= $item['stock_qty'] ?> left</span>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </div>
-        <?php endif; ?>
-
-        <!-- Inventory List and Distributions tabs -->
-        <ul class="nav nav-tabs border-bottom mb-4" id="inventoryTabs" role="tablist">
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs border-bottom mb-4" id="medicineTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active fw-bold text-secondary" id="stock-tab" data-bs-toggle="tab" data-bs-target="#stock-view" type="button" role="tab" aria-controls="stock-view" aria-selected="true">
-                    <i class="bi bi-box-seam me-1"></i> Current Stock Inventory
+                <button class="nav-link active fw-bold text-secondary" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory-pane" type="button" role="tab" aria-controls="inventory-pane" aria-selected="true">
+                    <i class="bi bi-boxes me-1"></i> Stocks Inventory
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link fw-bold text-secondary" id="dist-tab" data-bs-toggle="tab" data-bs-target="#dist-view" type="button" role="tab" aria-controls="dist-view" aria-selected="false">
-                    <i class="bi bi-clock-history me-1"></i> Allocation History
+                <button class="nav-link fw-bold text-secondary" id="distributions-tab" data-bs-toggle="tab" data-bs-target="#distributions-pane" type="button" role="tab" aria-controls="distributions-pane" aria-selected="false">
+                    <i class="bi bi-box-arrow-up-right me-1"></i> Distribution Logs
                 </button>
             </li>
         </ul>
 
-        <div class="tab-content" id="inventoryTabsContent">
-            <!-- TAB 1: Stock Inventory -->
-            <div class="tab-pane fade show active" id="stock-view" role="tabpanel" aria-labelledby="stock-tab">
+        <div class="tab-content" id="medicineTabsContent">
+            <!-- Tab 1: Stocks Inventory -->
+            <div class="tab-pane fade show active" id="inventory-pane" role="tabpanel" aria-labelledby="inventory-tab">
+                <!-- Real-time Search Box and Action Buttons -->
+                <div class="row align-items-center mb-4 g-3">
+                    <div class="col-12 col-md-8 col-lg-5">
+                        <div class="input-group shadow-sm border rounded bg-white">
+                            <span class="input-group-text bg-white border-0"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" id="medicineSearch" class="form-control border-0" placeholder="Type to search medicines...">
+                            <button class="btn btn-light border-start dropdown-toggle text-secondary fw-semibold px-3" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                                <i class="bi bi-funnel"></i> Filters
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end p-3 shadow border-0 rounded-3 mt-1" style="width: 260px;">
+                                <h6 class="dropdown-header px-0 text-dark fw-bold mb-2">Filter Inventory</h6>
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted fw-semibold">Category</label>
+                                    <select id="medicineCategoryFilter" class="form-select form-select-sm shadow-none">
+                                        <option value="">All Categories</option>
+                                        <option value="Medicine">Medicine</option>
+                                        <option value="Vaccine">Vaccine</option>
+                                        <option value="Family Planning">Family Planning</option>
+                                        <option value="Supply">Supply</option>
+                                    </select>
+                                </div>
+                                <div class="mb-1">
+                                    <label class="form-label small text-muted fw-semibold">Status</label>
+                                    <select id="medicineStatusFilter" class="form-select form-select-sm shadow-none">
+                                        <option value="">All Statuses</option>
+                                        <option value="Good Stock">Good Stock</option>
+                                        <option value="Low Stock">Low Stock</option>
+                                        <option value="Out of Stock">Out of Stock</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-lg-7 d-flex justify-content-md-end gap-2">
+                        <button type="button" class="btn btn-primary" onclick="newMedicine()">
+                            <i class="bi bi-plus-lg me-1"></i> Add Inventory Item
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dynamic Inventory Table -->
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-4">
                         <div class="table-responsive">
-                            <table id="medicines-table" class="table table-hover align-middle w-100">
+                            <table class="table table-hover align-middle w-100">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Item Code</th>
                                         <th>Name</th>
                                         <th>Category</th>
                                         <th>Stock Qty</th>
-                                        <th>Reorder Level</th>
+                                        <th class="text-center">Reorder Level</th>
                                         <th class="text-center">Status</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <?php foreach ($medicines as $med): 
-                                        $isLow = $med['stock_qty'] <= $med['reorder_level'];
-                                    ?>
-                                        <tr>
-                                            <td class="fw-bold text-primary"><?= escape($med['code']) ?></td>
-                                            <td>
-                                                <div class="fw-semibold"><?= escape($med['name']) ?></div>
-                                                <small class="text-muted text-truncate d-block" style="max-width: 250px;"><?= escape($med['description'] ?: 'No description.') ?></small>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle">
-                                                    <?php if ($med['category'] === 'Medicine'): ?>
-                                                        <i class="bi bi-capsule me-1 text-primary"></i>
-                                                    <?php elseif ($med['category'] === 'Vaccine'): ?>
-                                                        <i class="bi bi-shield-plus me-1 text-success"></i>
-                                                    <?php else: ?>
-                                                        <i class="bi bi-box me-1 text-secondary"></i>
-                                                    <?php endif; ?>
-                                                    <?= escape($med['category']) ?>
-                                                </span>
-                                            </td>
-                                            <td class="fw-semibold <?= $isLow ? 'text-danger' : '' ?>">
-                                                <?= number_format($med['stock_qty']) ?>
-                                            </td>
-                                            <td><?= number_format($med['reorder_level']) ?></td>
-                                            <td class="text-center">
-                                                <?php if ($med['stock_qty'] === 0): ?>
-                                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle">Out of Stock</span>
-                                                <?php elseif ($isLow): ?>
-                                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle">Low Stock</span>
-                                                <?php else: ?>
-                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle">Good Stock</span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="btn-group gap-1">
-                                                    <button onclick="triggerRestock(<?= $med['id'] ?>, '<?= escape($med['name']) ?>', '<?= escape($med['code']) ?>')" class="btn btn-outline-success btn-sm rounded-2" title="Restock Item">
-                                                        <i class="bi bi-plus-circle"></i> Restock
-                                                    </button>
-                                                    <button type="button" class="btn btn-outline-primary btn-sm rounded-2" onclick="editMedicineItem(<?= $med['id'] ?>)" title="Edit Item">
-                                                        <i class="bi bi-pencil"></i>
-                                                    </button>
-                                                    <button onclick="confirmDelete(<?= $med['id'] ?>, '<?= escape($med['name']) ?>')" class="btn btn-outline-danger btn-sm rounded-2" title="Delete Item">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
+                                <tbody id="medicineTable">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-5">
+                                            <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <div class="text-muted mt-2 small">Fetching inventory from API...</div>
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -134,34 +103,64 @@ require_once LAYOUT_PATH . 'sidebar.php';
                 </div>
             </div>
 
-            <!-- TAB 2: Allocation History -->
-            <div class="tab-pane fade" id="dist-view" role="tabpanel" aria-labelledby="dist-tab">
+            <!-- Tab 2: Distribution Logs -->
+            <div class="tab-pane fade" id="distributions-pane" role="tabpanel" aria-labelledby="distributions-tab">
+                <!-- Real-time Search Box and Log Distribution Button -->
+                <div class="row align-items-center mb-4 g-3">
+                    <div class="col-12 col-md-8 col-lg-5">
+                        <div class="input-group shadow-sm border rounded bg-white">
+                            <span class="input-group-text bg-white border-0"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" id="distributionSearch" class="form-control border-0" placeholder="Type to search distributions...">
+                            <button class="btn btn-light border-start dropdown-toggle text-secondary fw-semibold px-3" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                                <i class="bi bi-funnel"></i> Filters
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end p-3 shadow border-0 rounded-3 mt-1" style="width: 260px;">
+                                <h6 class="dropdown-header px-0 text-dark fw-bold mb-2">Filter Logs</h6>
+                                <div class="mb-1">
+                                    <label class="form-label small text-muted fw-semibold">Category</label>
+                                    <select id="distributionCategoryFilter" class="form-select form-select-sm shadow-none">
+                                        <option value="">All Categories</option>
+                                        <option value="Medicine">Medicine</option>
+                                        <option value="Vaccine">Vaccine</option>
+                                        <option value="Family Planning">Family Planning</option>
+                                        <option value="Supply">Supply</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-lg-7 d-flex justify-content-md-end gap-2">
+                        <button type="button" class="btn btn-success" onclick="newDistribution()">
+                            <i class="bi bi-plus-lg me-1"></i> Log Distribution
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Distributions Table -->
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-4">
                         <div class="table-responsive">
-                            <table id="distributions-table" class="table table-hover align-middle w-100">
+                            <table class="table table-hover align-middle w-100">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Date</th>
-                                        <th>Item Allocated</th>
-                                        <th>Recipient</th>
+                                        <th>Item Name</th>
+                                        <th>Category</th>
+                                        <th>Recipient Resident</th>
                                         <th>Quantity</th>
                                         <th>Health Worker</th>
+                                        <th class="text-center">Action</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <?php foreach ($distributions as $d): ?>
-                                        <tr>
-                                            <td class="small fw-semibold"><?= date('Y-m-d', strtotime($d['distribution_date'])) ?></td>
-                                            <td>
-                                                <span class="fw-semibold"><?= escape($d['medicine_name']) ?></span>
-                                                <small class="text-muted d-block"><?= escape($d['medicine_code']) ?></small>
-                                            </td>
-                                            <td><?= escape($d['resident_name']) ?></td>
-                                            <td class="fw-bold text-success"><?= $d['quantity'] ?> pcs</td>
-                                            <td><?= escape($d['worker_name']) ?></td>
-                                        </tr>
-                                    <?php endforeach; ?>
+                                <tbody id="distributionTable">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-5">
+                                            <div class="spinner-border text-success" role="status" style="width: 2.5rem; height: 2.5rem;">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <div class="text-muted mt-2 small">Fetching distributions...</div>
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -173,257 +172,200 @@ require_once LAYOUT_PATH . 'sidebar.php';
     </div>
 </div>
 
-<!-- Add Inventory Item Modal -->
-<div class="modal fade" id="addMedicineModal" tabindex="-1" aria-labelledby="addMedicineModalLabel" aria-hidden="true">
+<!-- Add/Edit Medicine Modal -->
+<div class="modal fade" id="medicineModal" tabindex="-1" aria-labelledby="medicineModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow">
+        <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-primary bg-gradient text-white">
-                <h5 class="modal-title fw-bold" id="addMedicineModalLabel">
-                    <i class="bi bi-box-seam-fill me-2"></i>Add Inventory Item
+                <h5 class="modal-title fw-bold" id="medicineModalLabel">
+                    <i class="bi bi-box-seam-fill me-2"></i><span id="modalTitleText">Add Inventory Item</span>
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="<?= url('index.php?route=medicine/store') ?>" method="POST" class="needs-validation" novalidate id="modal-medicine-form">
+            <form id="medicineForm" class="needs-validation" novalidate>
+                <input type="hidden" id="medicineId" name="id">
+                
                 <div class="modal-body p-4">
-                    <?= csrf_field() ?>
-
                     <div class="row g-3">
                         <!-- Item Name -->
                         <div class="col-12 col-md-6">
-                            <label for="modal_med_name" class="form-label fw-semibold small">Item Name (Generic/Brand) <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="modal_med_name" name="name" required placeholder="e.g. Paracetamol (Biogesic), BCG Vaccine">
+                            <label for="medName" class="form-label fw-semibold small">Item Name (Generic/Brand) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="medName" name="name" required placeholder="e.g. Paracetamol (Biogesic)">
                             <div class="invalid-feedback">Item name is required.</div>
                         </div>
 
                         <!-- Category -->
                         <div class="col-12 col-md-6">
-                            <label for="modal_med_category" class="form-label fw-semibold small">Inventory Category <span class="text-danger">*</span></label>
-                            <select class="form-select" id="modal_med_category" name="category" required>
+                            <label for="medCategory" class="form-label fw-semibold small">Inventory Category <span class="text-danger">*</span></label>
+                            <select class="form-select" id="medCategory" name="category" required>
                                 <option value="" selected disabled>Select Category</option>
                                 <option value="Medicine">Medicine (Tablets/Syrup)</option>
                                 <option value="Vaccine">Vaccine (Immunization)</option>
-                                <option value="Supply">Supply (Bandage/Syringes/PPEs)</option>
+                                <option value="Family Planning">Family Planning (Pills/Condoms/Implants)</option>
+                                <option value="Supply">Supply (Bandage/Syringes)</option>
                             </select>
                             <div class="invalid-feedback">Please select a category.</div>
                         </div>
 
                         <!-- Initial Stock -->
-                        <div class="col-12 col-md-6">
-                            <label for="modal_med_stock_qty" class="form-label fw-semibold small">Initial Stock Qty <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="modal_med_stock_qty" name="stock_qty" min="0" value="0" required>
-                            <div class="invalid-feedback">Initial stock quantity is required.</div>
+                        <div class="col-12 col-md-6" id="stockQtyContainer">
+                            <label for="medStockQty" class="form-label fw-semibold small">Initial Stock Qty <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="medStockQty" name="stock_qty" min="0" value="0" required>
+                            <div class="invalid-feedback">Stock quantity is required and must be 0 or greater.</div>
                         </div>
 
                         <!-- Reorder Level -->
                         <div class="col-12 col-md-6">
-                            <label for="modal_med_reorder_level" class="form-label fw-semibold small">Reorder Threshold Limit <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="modal_med_reorder_level" name="reorder_level" min="1" value="10" required>
-                            <small class="text-muted d-block mt-1">A warning is shown when stock falls below this level.</small>
-                            <div class="invalid-feedback">Reorder level is required.</div>
+                            <label for="medReorderLevel" class="form-label fw-semibold small">Reorder Threshold Limit <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="medReorderLevel" name="reorder_level" min="1" value="10" required>
+                            <div class="invalid-feedback">Reorder level is required and must be 1 or greater.</div>
                         </div>
 
                         <!-- Description -->
                         <div class="col-12">
-                            <label for="modal_med_description" class="form-label fw-semibold small">Description</label>
-                            <textarea class="form-control" id="modal_med_description" name="description" rows="2" placeholder="e.g. Dosages, chemical composition, shelf location..."></textarea>
+                            <label for="medDescription" class="form-label fw-semibold small">Description</label>
+                            <textarea class="form-control" id="medDescription" name="description" rows="3" placeholder="e.g. Dosages, location details..."></textarea>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light px-4 py-3">
                     <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary px-4">Create Item</button>
+                    <button type="submit" class="btn btn-primary px-4" id="saveButton">Save Item</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Restock Modal Form -->
-<div class="modal fade" id="restockModal" tabindex="-1" aria-labelledby="restockModalTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 400px;">
-        <div class="modal-content border-0 shadow-lg rounded-3">
+<!-- Restock Item Modal -->
+<div class="modal fade" id="restockModal" tabindex="-1" aria-labelledby="restockModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-success bg-gradient text-white">
-                <h5 class="modal-title fw-bold" id="restockModalTitle"><i class="bi bi-box-seam me-2"></i>Restock Item</h5>
+                <h5 class="modal-title fw-bold" id="restockModalLabel">
+                    <i class="bi bi-plus-circle-fill me-2"></i>Restock Inventory Item
+                </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="<?= url('index.php?route=medicine/restock') ?>" method="POST">
-                <?= csrf_field() ?>
-                <input type="hidden" id="restock-medicine-id" name="medicine_id">
+            <form id="restockForm" class="needs-validation" novalidate>
+                <input type="hidden" id="restockMedicineId" name="medicine_id">
                 
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <span class="d-block text-muted small">Restocking Item:</span>
-                        <strong class="d-block text-dark fs-5" id="restock-item-name"></strong>
-                        <span class="badge bg-light text-muted border mt-1" id="restock-item-code"></span>
+                        <strong class="d-block text-dark fs-5" id="restockItemName"></strong>
+                        <span class="badge bg-light text-muted border mt-1" id="restockItemCode"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label for="restock_qty" class="form-label fw-semibold small">Quantity to Add <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="restock_qty" name="restock_qty" min="1" required placeholder="Enter amount to add">
-                        <div class="invalid-feedback">Please enter valid quantity.</div>
+                        <label for="restockQty" class="form-label fw-semibold small">Quantity to Add <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="restockQty" name="restock_qty" min="1" required placeholder="Enter amount to add">
+                        <div class="invalid-feedback">Please enter valid quantity (minimum 1).</div>
                     </div>
                 </div>
 
                 <div class="modal-footer border-0 p-3 bg-light">
                     <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary btn-sm px-4">Add Stock</button>
+                    <button type="submit" class="btn btn-success btn-sm px-4" id="restockSaveButton">Add Stock</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Edit Inventory Item Modal -->
-<div class="modal fade" id="editMedicineModal" tabindex="-1" aria-labelledby="editMedicineModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-primary bg-gradient text-white">
-                <h5 class="modal-title fw-bold" id="editMedicineModalLabel">
-                    <i class="bi bi-pencil-square me-2"></i>Edit Inventory Item Details
+<!-- Log Distribution Modal -->
+<div class="modal fade" id="distributionModal" tabindex="-1" aria-labelledby="distributionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-success bg-gradient text-white">
+                <h5 class="modal-title fw-bold" id="distributionModalLabel">
+                    <i class="bi bi-box-arrow-up-right me-2"></i><span id="distModalTitleText">Log Distribution / Dispensing</span>
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="<?= url('index.php?route=medicine/update') ?>" method="POST" class="needs-validation" novalidate id="edit-medicine-form">
+            <form id="distributionForm" class="needs-validation" novalidate>
+                <input type="hidden" id="distributionId" name="id">
                 <div class="modal-body p-4">
-                    <?= csrf_field() ?>
-                    <input type="hidden" id="edit_med_id" name="id">
-
                     <div class="row g-3">
-                        <!-- Item Name -->
-                        <div class="col-12 col-md-6">
-                            <label for="edit_med_name" class="form-label fw-semibold small">Item Name (Generic/Brand) <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="edit_med_name" name="name" required placeholder="e.g. Paracetamol (Biogesic), BCG Vaccine">
-                            <div class="invalid-feedback">Item name is required.</div>
-                        </div>
-
-                        <!-- Category -->
-                        <div class="col-12 col-md-6">
-                            <label for="edit_med_category" class="form-label fw-semibold small">Inventory Category <span class="text-danger">*</span></label>
-                            <select class="form-select" id="edit_med_category" name="category" required>
-                                <option value="" disabled>Select Category</option>
-                                <option value="Medicine">Medicine (Tablets/Syrup)</option>
-                                <option value="Vaccine">Vaccine (Immunization)</option>
-                                <option value="Supply">Supply (Bandage/Syringes/PPEs)</option>
-                            </select>
-                            <div class="invalid-feedback">Please select a category.</div>
-                        </div>
-
-                        <!-- Stock Qty -->
-                        <div class="col-12 col-md-6">
-                            <label for="edit_med_stock_qty" class="form-label fw-semibold small">Current Stock Qty <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="edit_med_stock_qty" name="stock_qty" min="0" required>
-                            <div class="invalid-feedback">Stock quantity is required.</div>
-                        </div>
-
-                        <!-- Reorder Level -->
-                        <div class="col-12 col-md-6">
-                            <label for="edit_med_reorder_level" class="form-label fw-semibold small">Reorder Threshold Limit <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="edit_med_reorder_level" name="reorder_level" min="1" required>
-                            <small class="text-muted d-block mt-1">A warning is shown when stock falls below this level.</small>
-                            <div class="invalid-feedback">Reorder level is required.</div>
-                        </div>
-
-                        <!-- Description -->
+                        <!-- Select Resident -->
                         <div class="col-12">
-                            <label for="edit_med_description" class="form-label fw-semibold small">Description</label>
-                            <textarea class="form-control" id="edit_med_description" name="description" rows="2" placeholder="e.g. Dosages, chemical composition, shelf location..."></textarea>
+                            <label for="distResidentId" class="form-label fw-semibold small">Select Resident (Recipient) <span class="text-danger">*</span></label>
+                            <select class="form-select searchable-select" id="distResidentId" name="resident_id" required>
+                                <option value="" selected disabled>Choose Resident...</option>
+                                <!-- Will be loaded dynamically via JS based on category -->
+                            </select>
+                            <div class="invalid-feedback">Please select a resident.</div>
+                        </div>
+
+                        <!-- Select Item -->
+                        <div class="col-12">
+                            <label for="distMedicineId" class="form-label fw-semibold small">Select Item to Dispense <span class="text-danger">*</span></label>
+                            <select class="form-select" id="distMedicineId" name="medicine_id" required>
+                                <option value="" selected disabled>Choose Item...</option>
+                                <!-- Will be loaded dynamically via JS -->
+                            </select>
+                            <div class="invalid-feedback">Please select an item.</div>
+                        </div>
+
+                        <!-- Quantity -->
+                        <div class="col-12 col-md-6">
+                            <label for="distQuantity" class="form-label fw-semibold small">Quantity to Dispense <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="distQuantity" name="quantity" min="1" required placeholder="e.g. 10">
+                            <small class="text-muted" id="distStockHint">Select an item to see stock.</small>
+                            <div class="invalid-feedback" id="distQtyFeedback">Please enter a valid quantity.</div>
+                        </div>
+
+                        <!-- Date -->
+                        <div class="col-12 col-md-6">
+                            <label for="distDate" class="form-label fw-semibold small">Distribution Date <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control datepicker" id="distDate" name="distribution_date" value="<?= date('Y-m-d') ?>" required>
+                            <div class="invalid-feedback">Date is required.</div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light px-4 py-3">
-                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary px-4">Update Item</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success btn-sm px-4" id="saveDistButton">Log Dispensing</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-
-<?php require_once LAYOUT_PATH . 'footer.php'; ?>
+<!-- View Distribution Details Modal -->
+<div class="modal fade" id="viewDistributionModal" tabindex="-1" aria-labelledby="viewDistributionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-3">
+            <div class="modal-header bg-success bg-gradient text-white">
+                <h5 class="modal-title fw-bold" id="viewDistributionModalLabel">
+                    <i class="bi bi-eye-fill me-2"></i>Distribution Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" id="viewDistributionBody">
+                <!-- Dynamically loaded by JavaScript -->
+            </div>
+            <div class="modal-footer bg-light border-0">
+                <button type="button" class="btn btn-secondary px-4 btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
-$(document).ready(function() {
-    $('#medicines-table').DataTable({
-        responsive: true,
-        order: [[0, 'asc']],
-        columnDefs: [
-            { orderable: false, targets: 6 }
-        ]
-    });
-
-    $('#distributions-table').DataTable({
-        responsive: true,
-        order: [[0, 'desc']]
-    });
-});
-
-function editMedicineItem(id) {
-    App.showLoader();
-    $.getJSON(`index.php?route=medicine/detail_json&id=${id}`)
-        .done(function(res) {
-            App.hideLoader();
-            if (res.success) {
-                const med = res.data;
-                $('#edit_med_id').val(med.id);
-                $('#edit_med_name').val(med.name);
-                $('#edit_med_category').val(med.category);
-                $('#edit_med_stock_qty').val(med.stock_qty);
-                $('#edit_med_reorder_level').val(med.reorder_level);
-                $('#edit_med_description').val(med.description || '');
-
-                const modal = new bootstrap.Modal(document.getElementById('editMedicineModal'));
-                modal.show();
-            } else {
-                Swal.fire('Error', res.message || 'Unable to fetch inventory item details.', 'error');
-            }
-        })
-        .fail(function() {
-            App.hideLoader();
-            Swal.fire('Error', 'Communication error happened.', 'error');
-        });
-}
-
-function triggerRestock(id, name, code) {
-    $('#restock-medicine-id').val(id);
-    $('#restock-item-name').text(name);
-    $('#restock-item-code').text(code);
-    $('#restock_qty').val('');
-    
-    const modal = new bootstrap.Modal(document.getElementById('restockModal'));
-    modal.show();
-}
-
-function confirmDelete(id, name) {
-    Swal.fire({
-        title: 'Delete Inventory Item?',
-        text: `Are you sure you want to delete ${name}? This will remove it from search options.`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#64748b',
-        confirmButtonText: 'Yes, Delete'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            window.location.href = `index.php?route=medicine/delete&id=${id}`;
-        }
-    });
-}
-
-// Bootstrap Form Validations for Medicine Modals
-(function () {
-  'use strict'
-  var forms = document.querySelectorAll('#modal-medicine-form, #edit-medicine-form')
-  Array.prototype.slice.call(forms)
-    .forEach(function (form) {
-      form.addEventListener('submit', function (event) {
-        if (!form.checkValidity()) {
-          event.preventDefault()
-          event.stopPropagation()
-        } else {
-            App.showLoader();
-        }
-        form.classList.add('was-validated')
-      }, false)
-    })
-})()
+    // Pass residents data to JS for dynamic filtering
+    const allResidents = <?= json_encode(array_map(function($r) {
+        return [
+            'id' => $r['id'],
+            'name' => $r['last_name'] . ', ' . $r['first_name'] . ' ' . ($r['middle_name'] ? substr($r['middle_name'], 0, 1) . '.' : ''),
+            'gender' => $r['gender'],
+            'age' => $r['age'],
+            'resident_id' => $r['resident_id']
+        ];
+    }, $residents)) ?>;
 </script>
+
+<?php 
+// Pass custom script URL to footer layout script loader
+$pageScript = url('js/medicine_js.js');
+require_once LAYOUT_PATH . 'footer.php'; 
+?>

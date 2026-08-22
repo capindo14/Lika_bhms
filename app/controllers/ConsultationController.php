@@ -6,7 +6,6 @@ use App\Middleware\AuthMiddleware;
 use App\Models\Consultation;
 use App\Models\Resident;
 use App\Models\Medicine;
-use App\Services\ValidationService;
 use Exception;
 
 class ConsultationController {
@@ -15,182 +14,191 @@ class ConsultationController {
      */
     public function index(): void {
         AuthMiddleware::handle();
-
-        $consultations = Consultation::getAll();
         $residents = Resident::getAll('Active');
         $medicines = Medicine::getAll();
         $pageTitle = 'Medical Consultations';
-        
         require_once VIEW_PATH . 'consultation/index.php';
     }
 
     /**
-     * Display log consultation form
+     * Get list of consultations in JSON format
      */
-    public function create(): void {
+    public function apiList(): void {
         AuthMiddleware::handle();
+        header('Content-Type: application/json');
 
-        $residents = Resident::getAll('Active');
-        $medicines = Medicine::getAll(); // Fetch all items in inventory to allow dispensation
-        
-        $pageTitle = 'Log Consultation';
-        require_once VIEW_PATH . 'consultation/create.php';
+        $consultations = Consultation::getAll();
+        echo json_encode($consultations);
+        exit;
     }
 
     /**
-     * Store a consultation record
+     * Get details of a single consultation in JSON
      */
-    public function store(): void {
+    public function apiDetail(): void {
         AuthMiddleware::handle();
+        header('Content-Type: application/json');
 
-        if (!verify_csrf_token($_POST['csrf_token'] ?? null)) {
-            flash('error', 'CSRF verification failed. Please try again.');
-            redirect('consultation/create');
+        $id = (int)($_GET['id'] ?? 0);
+        $consultation = Consultation::getById($id);
+
+        if (!$consultation) {
+            echo json_encode(['status' => 'error', 'message' => 'Consultation record not found']);
+            exit;
         }
 
-        $validator = new ValidationService();
-        $data = sanitize_array($_POST);
+        echo json_encode($consultation);
+        exit;
+    }
+
+    /**
+     * Get details of a single consultation in wrapper JSON format for views
+     */
+    public function detail_json(): void {
+        AuthMiddleware::handle();
+        header('Content-Type: application/json');
+
+        $id = (int)($_GET['id'] ?? 0);
+        $consultation = Consultation::getById($id);
+
+        if (!$consultation) {
+            echo json_encode(['success' => false, 'message' => 'Consultation record not found']);
+            exit;
+        }
+
+        echo json_encode(['success' => true, 'data' => $consultation]);
+        exit;
+    }
+
+    /**
+     * Store a new consultation record (JSON POST)
+     */
+    public function apiStore(): void {
+        AuthMiddleware::handle();
+        header('Content-Type: application/json');
+
+        $data = json_decode(file_get_contents("php://input"), true);
         
-        // Enforce user footprint
-        $data['user_id'] = $_SESSION['user_id'];
+        $resident_id = isset($data['resident_id']) ? (int)$data['resident_id'] : 0;
+        $symptoms = trim($data['symptoms'] ?? '');
+        $diagnosis = trim($data['diagnosis'] ?? '');
+        $treatment = trim($data['treatment'] ?? '');
+        $consultation_date = trim($data['consultation_date'] ?? '');
 
-        $rules = [
-            'resident_id' => 'required|numeric',
-            'symptoms' => 'required',
-            'diagnosis' => 'required',
-            'treatment' => 'required',
-            'consultation_date' => 'required|date'
-        ];
-
-        if (!$validator->validate($data, $rules)) {
-            flash('error', $validator->getFirstError());
-            redirect('consultation/create');
+        if (!$resident_id || $symptoms === '' || $diagnosis === '' || $treatment === '' || $consultation_date === '') {
+            echo json_encode([
+                "status" => "error",
+                "message" => "Please fill in all required fields."
+            ]);
+            exit;
         }
+
+        // Add user footprint
+        $data['user_id'] = $_SESSION['user_id'];
 
         try {
             $insertedId = Consultation::create($data);
             
-            // Log action
-            db_log('CREATE_CONSULTATION', "Logged consultation CON# {$insertedId} for resident ID: " . $data['resident_id']);
+            db_log('CREATE_CONSULTATION_JS', "Logged consultation CON# {$insertedId} via JS CRUD");
             
-            flash('success', 'Consultation record logged successfully.');
-            redirect('consultation');
+            echo json_encode([
+                "status" => "success",
+                "message" => "Consultation logged successfully.",
+                "id" => $insertedId
+            ]);
         } catch (Exception $e) {
-            flash('error', $e->getMessage());
-            redirect('consultation/create');
+            echo json_encode([
+                "status" => "error",
+                "message" => $e->getMessage()
+            ]);
         }
+        exit;
     }
 
     /**
-     * Display edit form for consultation
+     * Update an existing consultation record (JSON POST)
      */
-    public function edit(): void {
+    public function apiUpdate(): void {
         AuthMiddleware::handle();
+        header('Content-Type: application/json');
 
-        $id = (int)($_GET['id'] ?? 0);
-        $consultation = Consultation::getById($id);
-
-        if (!$consultation) {
-            flash('error', 'Consultation record not found.');
-            redirect('consultation');
-        }
-
-        $residents = Resident::getAll('Active');
-        $medicines = Medicine::getAll();
-
-        $pageTitle = 'Edit Consultation Details - ' . $consultation['consultation_no'];
-        require_once VIEW_PATH . 'consultation/edit.php';
-    }
-
-    /**
-     * Update consultation record
-     */
-    public function update(): void {
-        AuthMiddleware::handle();
-
-        $id = (int)($_POST['id'] ?? 0);
-        if (!$id) {
-            flash('error', 'Invalid consultation record.');
-            redirect('consultation');
-        }
-
-        if (!verify_csrf_token($_POST['csrf_token'] ?? null)) {
-            flash('error', 'CSRF verification failed. Please try again.');
-            redirect("consultation");
-        }
-
-        $validator = new ValidationService();
-        $data = sanitize_array($_POST);
+        $data = json_decode(file_get_contents("php://input"), true);
         
-        // Enforce user footprint
-        $data['user_id'] = $_SESSION['user_id'];
+        $id = isset($data['id']) ? (int)$data['id'] : 0;
+        $resident_id = isset($data['resident_id']) ? (int)$data['resident_id'] : 0;
+        $symptoms = trim($data['symptoms'] ?? '');
+        $diagnosis = trim($data['diagnosis'] ?? '');
+        $treatment = trim($data['treatment'] ?? '');
+        $consultation_date = trim($data['consultation_date'] ?? '');
 
-        $rules = [
-            'resident_id' => 'required|numeric',
-            'symptoms' => 'required',
-            'diagnosis' => 'required',
-            'treatment' => 'required',
-            'consultation_date' => 'required|date'
-        ];
-
-        if (!$validator->validate($data, $rules)) {
-            flash('error', $validator->getFirstError());
-            redirect("consultation");
+        if (!$id || !$resident_id || $symptoms === '' || $diagnosis === '' || $treatment === '' || $consultation_date === '') {
+            echo json_encode([
+                "status" => "error",
+                "message" => "Please fill in all required fields."
+            ]);
+            exit;
         }
+
+        $data['user_id'] = $_SESSION['user_id'];
 
         try {
             Consultation::update($id, $data);
             
-            // Log update
-            db_log('UPDATE_CONSULTATION', "Updated consultation ID: " . $id);
+            db_log('UPDATE_CONSULTATION_JS', "Updated consultation ID: {$id} via JS CRUD");
             
-            flash('success', 'Consultation record updated successfully.');
-            redirect('consultation');
+            echo json_encode([
+                "status" => "success",
+                "message" => "Consultation updated successfully."
+            ]);
         } catch (Exception $e) {
-            flash('error', $e->getMessage());
-            redirect("consultation");
+            echo json_encode([
+                "status" => "error",
+                "message" => $e->getMessage()
+            ]);
         }
+        exit;
     }
 
     /**
-     * Delete consultation record
+     * Delete consultation record (JSON POST)
      */
-    public function delete(): void {
+    public function apiDelete(): void {
         AuthMiddleware::handle(['Admin', 'Health Worker']);
+        header('Content-Type: application/json');
 
-        $id = (int)($_GET['id'] ?? 0);
+        $data = json_decode(file_get_contents("php://input"), true);
+        $id = isset($data['id']) ? (int)$data['id'] : 0;
+
+        if (!$id) {
+            echo json_encode([
+                "status" => "error",
+                "message" => "Invalid consultation ID."
+            ]);
+            exit;
+        }
+
         $consultation = Consultation::getById($id);
-
         if (!$consultation) {
-            flash('error', 'Consultation record not found.');
-            redirect('consultation');
+            echo json_encode([
+                "status" => "error",
+                "message" => "Consultation record not found."
+            ]);
+            exit;
         }
 
         if (Consultation::delete($id)) {
-            // Log action
-            db_log('DELETE_CONSULTATION', "Deleted consultation: " . $consultation['consultation_no'] . " (ID: " . $id . ")");
-            
-            flash('success', 'Consultation record deleted successfully.');
+            db_log('DELETE_CONSULTATION_JS', "Deleted consultation: " . $consultation['consultation_no'] . " (ID: " . $id . ") via JS CRUD");
+            echo json_encode([
+                "status" => "success",
+                "message" => "Consultation deleted successfully."
+            ]);
         } else {
-            flash('error', 'Failed to delete consultation record.');
+            echo json_encode([
+                "status" => "error",
+                "message" => "Failed to delete consultation."
+            ]);
         }
-
-        redirect('consultation');
-    }
-
-    /**
-     * Return consultation details as JSON
-     */
-    public function detail_json(): void {
-        AuthMiddleware::handle();
-        $id = (int)($_GET['id'] ?? 0);
-        $consultation = Consultation::getById($id);
-        
-        if ($consultation) {
-            json_response(true, 'Consultation retrieved successfully.', $consultation);
-        } else {
-            json_response(false, 'Consultation not found.');
-        }
+        exit;
     }
 }
 

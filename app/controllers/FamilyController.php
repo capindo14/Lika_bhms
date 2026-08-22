@@ -5,7 +5,6 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Models\Family;
 use App\Models\Resident;
-use App\Services\ValidationService;
 use Exception;
 
 class FamilyController {
@@ -14,59 +13,73 @@ class FamilyController {
      */
     public function index(): void {
         AuthMiddleware::handle();
-
-        $families = Family::getAll();
-        $residents = Resident::getAll('Active');
         $pageTitle = 'Family Profiles';
-        
         require_once VIEW_PATH . 'family/index.php';
     }
 
     /**
-     * Display the family creation form
+     * Get list of family profiles in JSON
      */
-    public function create(): void {
+    public function apiList(): void {
         AuthMiddleware::handle();
-
-        // Fetch residents who can be family heads (active)
-        $residents = Resident::getAll('Active');
+        header('Content-Type: application/json');
         
-        $pageTitle = 'Create Family Profile';
-        require_once VIEW_PATH . 'family/create.php';
+        $families = Family::getAll();
+        echo json_encode($families);
+        exit;
     }
 
     /**
-     * Store a newly created family profile
+     * Get detail of a family profile in JSON
      */
-    public function store(): void {
+    public function apiDetail(): void {
         AuthMiddleware::handle();
+        header('Content-Type: application/json');
+        
+        $id = (int)($_GET['id'] ?? 0);
+        $family = Family::getById($id);
 
-        if (!verify_csrf_token($_POST['csrf_token'] ?? null)) {
-            flash('error', 'CSRF verification failed. Please try again.');
-            redirect('family/create');
+        if (!$family) {
+            echo json_encode(['status' => 'error', 'message' => 'Family profile not found']);
+            exit;
         }
 
-        $validator = new ValidationService();
-        $data = sanitize_array($_POST);
+        $members = Family::getMembers($id);
 
-        $rules = [
-            'head_resident_id' => 'required|numeric',
-            'address' => 'required'
-        ];
+        echo json_encode([
+            'status' => 'success',
+            'family' => $family,
+            'members' => $members
+        ]);
+        exit;
+    }
 
-        if (!$validator->validate($data, $rules)) {
-            flash('error', $validator->getFirstError());
-            redirect('family/create');
+    /**
+     * Store new family profile (JSON POST)
+     */
+    public function apiStore(): void {
+        AuthMiddleware::handle();
+        header('Content-Type: application/json');
+
+        $data = json_decode(file_get_contents("php://input"), true);
+        
+        $head_id = isset($data['head_resident_id']) ? (int)$data['head_resident_id'] : 0;
+        $address = trim($data['address'] ?? '');
+
+        if (!$head_id || $address === '') {
+            echo json_encode([
+                "status" => "error",
+                "message" => "Family Head and Complete Address are required."
+            ]);
+            exit;
         }
 
-        // Process Members
         $members = [];
-        if (isset($_POST['member_resident_id']) && is_array($_POST['member_resident_id'])) {
-            foreach ($_POST['member_resident_id'] as $index => $rId) {
-                $rId = (int)$rId;
-                $rel = sanitize_input($_POST['member_relationship'][$index] ?? '');
-                
-                if (!empty($rId) && !empty($rel)) {
+        if (isset($data['members']) && is_array($data['members'])) {
+            foreach ($data['members'] as $m) {
+                $rId = (int)($m['resident_id'] ?? 0);
+                $rel = trim($m['relationship'] ?? '');
+                if ($rId > 0 && $rel !== '') {
                     $members[] = [
                         'resident_id' => $rId,
                         'relationship' => $rel
@@ -78,76 +91,49 @@ class FamilyController {
         try {
             $insertedId = Family::create($data, $members);
             
-            // Log action
-            db_log('CREATE_FAMILY', "Created family profile FAM# {$insertedId} with head ID: " . $data['head_resident_id']);
+            db_log('CREATE_FAMILY_JS', "Created family profile FAM# {$insertedId} via JS CRUD");
             
-            flash('success', 'Family profile created successfully.');
-            redirect('family');
+            echo json_encode([
+                "status" => "success",
+                "message" => "Family profile created successfully.",
+                "id" => $insertedId
+            ]);
         } catch (Exception $e) {
-            flash('error', $e->getMessage());
-            redirect('family/create');
+            echo json_encode([
+                "status" => "error",
+                "message" => $e->getMessage()
+            ]);
         }
+        exit;
     }
 
     /**
-     * Display the family profile edit form
+     * Update family profile (JSON POST)
      */
-    public function edit(): void {
+    public function apiUpdate(): void {
         AuthMiddleware::handle();
+        header('Content-Type: application/json');
 
-        $id = (int)($_GET['id'] ?? 0);
-        $family = Family::getById($id);
-
-        if (!$family) {
-            flash('error', 'Family profile not found.');
-            redirect('family');
-        }
-
-        $members = Family::getMembers($id);
-        $residents = Resident::getAll('Active');
+        $data = json_decode(file_get_contents("php://input"), true);
         
-        $pageTitle = 'Edit Family Profile - ' . $family['family_no'];
-        require_once VIEW_PATH . 'family/edit.php';
-    }
+        $id = isset($data['id']) ? (int)$data['id'] : 0;
+        $head_id = isset($data['head_resident_id']) ? (int)$data['head_resident_id'] : 0;
+        $address = trim($data['address'] ?? '');
 
-    /**
-     * Update family profile details
-     */
-    public function update(): void {
-        AuthMiddleware::handle();
-
-        $id = (int)($_POST['id'] ?? 0);
-        if (!$id) {
-            flash('error', 'Invalid family profile.');
-            redirect('family');
+        if (!$id || !$head_id || $address === '') {
+            echo json_encode([
+                "status" => "error",
+                "message" => "ID, Family Head, and Complete Address are required."
+            ]);
+            exit;
         }
 
-        if (!verify_csrf_token($_POST['csrf_token'] ?? null)) {
-            flash('error', 'CSRF verification failed. Please try again.');
-            redirect("family");
-        }
-
-        $validator = new ValidationService();
-        $data = sanitize_array($_POST);
-
-        $rules = [
-            'head_resident_id' => 'required|numeric',
-            'address' => 'required'
-        ];
-
-        if (!$validator->validate($data, $rules)) {
-            flash('error', $validator->getFirstError());
-            redirect("family");
-        }
-
-        // Process Members
         $members = [];
-        if (isset($_POST['member_resident_id']) && is_array($_POST['member_resident_id'])) {
-            foreach ($_POST['member_resident_id'] as $index => $rId) {
-                $rId = (int)$rId;
-                $rel = sanitize_input($_POST['member_relationship'][$index] ?? '');
-                
-                if (!empty($rId) && !empty($rel)) {
+        if (isset($data['members']) && is_array($data['members'])) {
+            foreach ($data['members'] as $m) {
+                $rId = (int)($m['resident_id'] ?? 0);
+                $rel = trim($m['relationship'] ?? '');
+                if ($rId > 0 && $rel !== '') {
                     $members[] = [
                         'resident_id' => $rId,
                         'relationship' => $rel
@@ -159,67 +145,60 @@ class FamilyController {
         try {
             Family::update($id, $data, $members);
             
-            // Log update
-            db_log('UPDATE_FAMILY', "Updated family profile ID: " . $id);
+            db_log('UPDATE_FAMILY_JS', "Updated family profile ID: {$id} via JS CRUD");
             
-            flash('success', 'Family profile updated successfully.');
-            redirect('family');
+            echo json_encode([
+                "status" => "success",
+                "message" => "Family profile updated successfully."
+            ]);
         } catch (Exception $e) {
-            flash('error', $e->getMessage());
-            redirect("family");
+            echo json_encode([
+                "status" => "error",
+                "message" => $e->getMessage()
+            ]);
         }
+        exit;
     }
 
     /**
-     * Delete family profile
+     * Delete family profile (JSON POST)
      */
-    public function delete(): void {
+    public function apiDelete(): void {
         AuthMiddleware::handle(['Admin', 'Health Worker']);
-
-        $id = (int)($_GET['id'] ?? 0);
-        $family = Family::getById($id);
-
-        if (!$family) {
-            flash('error', 'Family profile not found.');
-            redirect('family');
-        }
-
-        if (Family::delete($id)) {
-            // Log deletion
-            db_log('DELETE_FAMILY', "Deleted family profile: " . $family['family_no'] . " (ID: " . $id . ")");
-            
-            flash('success', 'Family profile deleted successfully.');
-        } else {
-            flash('error', 'Failed to delete family profile.');
-        }
-
-        redirect('family');
-    }
-
-    /**
-     * Get family profile detail JSON for modal edit
-     */
-    public function detail_json(): void {
-        AuthMiddleware::handle();
-
         header('Content-Type: application/json');
-        $id = (int)($_GET['id'] ?? 0);
-        $family = Family::getById($id);
 
-        if (!$family) {
-            echo json_encode(['success' => false, 'message' => 'Family profile not found']);
+        $data = json_decode(file_get_contents("php://input"), true);
+        $id = isset($data['id']) ? (int)$data['id'] : 0;
+
+        if (!$id) {
+            echo json_encode([
+                "status" => "error",
+                "message" => "Invalid family profile ID."
+            ]);
             exit;
         }
 
-        $members = Family::getMembers($id);
+        $family = Family::getById($id);
+        if (!$family) {
+            echo json_encode([
+                "status" => "error",
+                "message" => "Family profile not found."
+            ]);
+            exit;
+        }
 
-        echo json_encode([
-            'success' => true,
-            'data' => [
-                'family' => $family,
-                'members' => $members
-            ]
-        ]);
+        if (Family::delete($id)) {
+            db_log('DELETE_FAMILY_JS', "Deleted family profile: " . $family['family_no'] . " (ID: " . $id . ") via JS CRUD");
+            echo json_encode([
+                "status" => "success",
+                "message" => "Family profile deleted successfully."
+            ]);
+        } else {
+            echo json_encode([
+                "status" => "error",
+                "message" => "Failed to delete family profile."
+            ]);
+        }
         exit;
     }
 }

@@ -15,203 +15,8 @@ class UserController {
     public function index(): void {
         // Enforce Admin role restriction
         AuthMiddleware::handle(['Admin']);
-
-        $users = User::getAll();
-
-        // Fetch System Audit Logs
-        $db = Database::getConnection();
-        $stmtLogs = $db->query("
-            SELECT al.*, u.username, u.fullname, u.role
-            FROM activity_logs al
-            LEFT JOIN users u ON al.user_id = u.id
-            ORDER BY al.created_at DESC
-            LIMIT 500
-        ");
-        $auditLogs = $stmtLogs->fetchAll();
-
         $pageTitle = 'User Accounts & System Logs';
         require_once VIEW_PATH . 'users/index.php';
-    }
-
-    /**
-     * Render registration page
-     */
-    public function create(): void {
-        AuthMiddleware::handle(['Admin']);
-        $pageTitle = 'Create System Account';
-        require_once VIEW_PATH . 'users/create.php';
-    }
-
-    /**
-     * Store new system user
-     */
-    public function store(): void {
-        AuthMiddleware::handle(['Admin']);
-
-        if (!verify_csrf_token($_POST['csrf_token'] ?? null)) {
-            flash('error', 'CSRF verification failed. Please try again.');
-            redirect('users/create');
-        }
-
-        $validator = new ValidationService();
-        $data = sanitize_array($_POST);
-
-        $rules = [
-            'username' => 'required|min:4',
-            'password' => 'required|min:6',
-            'role' => 'required',
-            'fullname' => 'required|min:3'
-        ];
-
-        if (!$validator->validate($data, $rules)) {
-            flash('error', $validator->getFirstError());
-            redirect('users/create');
-        }
-
-        try {
-            User::create($data);
-            
-            // Log creation
-            db_log('CREATE_USER', "Created system account: " . $data['username'] . " (" . $data['role'] . ")");
-            
-            flash('success', 'User account created successfully.');
-            redirect('users');
-        } catch (Exception $e) {
-            flash('error', $e->getMessage());
-            redirect('users/create');
-        }
-    }
-
-    /**
-     * Display edit form
-     */
-    public function edit(): void {
-        AuthMiddleware::handle(['Admin']);
-
-        $id = (int)($_GET['id'] ?? 0);
-        $user = User::getById($id);
-
-        if (!$user) {
-            flash('error', 'User account not found.');
-            redirect('users');
-        }
-
-        $pageTitle = 'Edit System Account';
-        require_once VIEW_PATH . 'users/edit.php';
-    }
-
-    /**
-     * Update user details
-     */
-    public function update(): void {
-        AuthMiddleware::handle(['Admin']);
-
-        $id = (int)($_POST['id'] ?? 0);
-        if (!$id) {
-            flash('error', 'Invalid user record.');
-            redirect('users');
-        }
-
-        if (!verify_csrf_token($_POST['csrf_token'] ?? null)) {
-            flash('error', 'CSRF verification failed. Please try again.');
-            redirect("users/edit&id={$id}");
-        }
-
-        $validator = new ValidationService();
-        $data = sanitize_array($_POST);
-
-        $rules = [
-            'username' => 'required|min:4',
-            'role' => 'required',
-            'fullname' => 'required|min:3',
-            'status' => 'required'
-        ];
-
-        if (!$validator->validate($data, $rules)) {
-            flash('error', $validator->getFirstError());
-            redirect("users/edit&id={$id}");
-        }
-
-        try {
-            User::update($id, $data);
-            
-            // Log update
-            db_log('UPDATE_USER', "Updated system user properties for ID: " . $id);
-            
-            flash('success', 'User account updated successfully.');
-            redirect('users');
-        } catch (Exception $e) {
-            flash('error', $e->getMessage());
-            redirect("users/edit&id={$id}");
-        }
-    }
-
-    /**
-     * Toggle status (Activate/Deactivate user)
-     */
-    public function toggle_status(): void {
-        AuthMiddleware::handle(['Admin']);
-
-        $id = (int)($_GET['id'] ?? 0);
-        $user = User::getById($id);
-
-        if (!$user) {
-            flash('error', 'User account not found.');
-            redirect('users');
-        }
-
-        if ($user['id'] === $_SESSION['user_id']) {
-            flash('error', 'You cannot deactivate your own administrative account.');
-            redirect('users');
-        }
-
-        try {
-            $newStatus = ($user['status'] === 'Active') ? 'Inactive' : 'Active';
-            
-            $db = Database::getConnection();
-            $stmt = $db->prepare("UPDATE users SET status = :status WHERE id = :id");
-            $stmt->execute([':status' => $newStatus, ':id' => $id]);
-            
-            // Log action
-            db_log('STATUS_TOGGLE', "Changed status of user account: " . $user['username'] . " to " . $newStatus);
-            
-            flash('success', "User account status updated to {$newStatus}.");
-        } catch (Exception $e) {
-            flash('error', 'Failed to toggle account status: ' . $e->getMessage());
-        }
-
-        redirect('users');
-    }
-
-    /**
-     * Delete user account (soft delete)
-     */
-    public function delete(): void {
-        AuthMiddleware::handle(['Admin']);
-
-        $id = (int)($_GET['id'] ?? 0);
-        $user = User::getById($id);
-
-        if (!$user) {
-            flash('error', 'User account not found.');
-            redirect('users');
-        }
-
-        if ($user['id'] === $_SESSION['user_id']) {
-            flash('error', 'You cannot delete your own administrative account.');
-            redirect('users');
-        }
-
-        if (User::delete($id)) {
-            // Log action
-            db_log('DELETE_USER', "Deleted user account: " . $user['username'] . " (ID: " . $id . ")");
-            
-            flash('success', 'User account deleted successfully.');
-        } else {
-            flash('error', 'Failed to delete user account.');
-        }
-
-        redirect('users');
     }
 
     /**
@@ -317,5 +122,200 @@ class UserController {
             flash('error', $e->getMessage());
             redirect('users/settings');
         }
+    }
+
+
+    /**
+     * Get list of users and system logs in JSON
+     */
+    public function apiList(): void {
+        AuthMiddleware::handle(['Admin']);
+        header('Content-Type: application/json');
+
+        $users = User::getAll();
+
+        // Fetch System Audit Logs
+        $db = Database::getConnection();
+        $stmtLogs = $db->query("
+            SELECT al.*, u.username, u.fullname, u.role
+            FROM activity_logs al
+            LEFT JOIN users u ON al.user_id = u.id
+            ORDER BY al.created_at DESC
+            LIMIT 500
+        ");
+        $auditLogs = $stmtLogs->fetchAll();
+
+        echo json_encode([
+            "users" => $users,
+            "logs" => $auditLogs
+        ]);
+        exit;
+    }
+
+    /**
+     * Get details of a single user in JSON
+     */
+    public function apiDetail(): void {
+        AuthMiddleware::handle(['Admin']);
+        header('Content-Type: application/json');
+
+        $id = (int)($_GET['id'] ?? 0);
+        $user = User::getById($id);
+
+        if (!$user) {
+            echo json_encode(['status' => 'error', 'message' => 'User account not found']);
+            exit;
+        }
+
+        // Hide password hash for security
+        unset($user['password']);
+
+        echo json_encode($user);
+        exit;
+    }
+
+    /**
+     * Store new system user (JSON POST)
+     */
+    public function apiStore(): void {
+        AuthMiddleware::handle(['Admin']);
+        header('Content-Type: application/json');
+
+        $data = json_decode(file_get_contents("php://input"), true);
+        
+        $username = trim($data['username'] ?? '');
+        $password = trim($data['password'] ?? '');
+        $role = trim($data['role'] ?? '');
+        $fullname = trim($data['fullname'] ?? '');
+        $status = trim($data['status'] ?? 'Active');
+
+        if ($username === '' || $password === '' || $role === '' || $fullname === '') {
+            echo json_encode([
+                "status" => "error",
+                "message" => "Please fill in all required fields."
+            ]);
+            exit;
+        }
+
+        try {
+            User::create([
+                'username' => $username,
+                'password' => $password,
+                'role' => $role,
+                'fullname' => $fullname,
+                'status' => $status
+            ]);
+            
+            db_log('CREATE_USER_JS', "Created system account: {$username} ({$role}) via JS CRUD");
+            
+            echo json_encode([
+                "status" => "success",
+                "message" => "User account created successfully."
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                "status" => "error",
+                "message" => $e->getMessage()
+            ]);
+        }
+        exit;
+    }
+
+    /**
+     * Update system user details (JSON POST)
+     */
+    public function apiUpdate(): void {
+        AuthMiddleware::handle(['Admin']);
+        header('Content-Type: application/json');
+
+        $data = json_decode(file_get_contents("php://input"), true);
+        
+        $id = isset($data['id']) ? (int)$data['id'] : 0;
+        $username = trim($data['username'] ?? '');
+        $role = trim($data['role'] ?? '');
+        $fullname = trim($data['fullname'] ?? '');
+        $status = trim($data['status'] ?? 'Active');
+        $password = trim($data['password'] ?? ''); // Optional password reset
+
+        if (!$id || $username === '' || $role === '' || $fullname === '') {
+            echo json_encode([
+                "status" => "error",
+                "message" => "Please fill in all required fields."
+            ]);
+            exit;
+        }
+
+        try {
+            User::update($id, [
+                'username' => $username,
+                'password' => $password,
+                'role' => $role,
+                'fullname' => $fullname,
+                'status' => $status
+            ]);
+            
+            db_log('UPDATE_USER_JS', "Updated user account ID: {$id} via JS CRUD");
+            
+            echo json_encode([
+                "status" => "success",
+                "message" => "User account updated successfully."
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                "status" => "error",
+                "message" => $e->getMessage()
+            ]);
+        }
+        exit;
+    }
+
+    /**
+     * Delete system user (JSON POST)
+     */
+    public function apiDelete(): void {
+        AuthMiddleware::handle(['Admin']);
+        header('Content-Type: application/json');
+
+        $data = json_decode(file_get_contents("php://input"), true);
+        $id = isset($data['id']) ? (int)$data['id'] : 0;
+
+        if (!$id) {
+            echo json_encode([
+                "status" => "error",
+                "message" => "Invalid user ID."
+            ]);
+            exit;
+        }
+
+        $user = User::getById($id);
+        if (!$user) {
+            echo json_encode([
+                "status" => "error",
+                "message" => "User not found."
+            ]);
+            exit;
+        }
+
+        if ($user['id'] === $_SESSION['user_id']) {
+            echo json_encode([
+                "status" => "error",
+                "message" => "You cannot delete your own administrative account."
+            ]);
+            exit;
+        }
+
+        if (User::delete($id)) {
+            db_log('DELETE_USER_JS', "Deleted user account: " . $user['username'] . " (ID: " . $id . ") via JS CRUD");
+            echo json_encode([
+                "status" => "success",
+                "message" => "User account deleted successfully."
+            ]);
+        } else {
+            echo json_encode([
+                "status" => "error",
+                "message" => "Failed to delete user account."
+            ]);
+        }
+        exit;
     }
 }

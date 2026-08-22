@@ -693,6 +693,10 @@ textarea.form-control {
     z-index: 9999;
 }
 
+.spinner-wrapper.d-none {
+    display: none !important;
+}
+
 [data-bs-theme="dark"] .spinner-wrapper {
     background-color: rgba(11, 15, 25, 0.6);
 }
@@ -1091,4 +1095,120 @@ body.printing-report {
     table.consultation-report-table td:nth-child(9)  /* Status */ {
         white-space: nowrap !important;
     }
+}
+
+/* Custom Global Styling for Nav Tabs - Tab outline shape but active tab has blue background and white text */
+.nav-tabs .nav-link {
+    color: var(--bs-secondary) !important;
+    border: 1px solid transparent !important;
+    border-top-left-radius: 0.25rem !important;
+    border-top-right-radius: 0.25rem !important;
+    font-weight: 700 !important;
+    transition: all 0.15s ease-in-out;
+    margin-bottom: -1px;
+}
+
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-link.active.text-secondary {
+    color: #ffffff !important;
+    background-color: #0d6efd !important;
+    border-color: #0d6efd #0d6efd transparent #0d6efd !important;
+}
+
+.nav-tabs .nav-link:hover:not(.active) {
+    border-color: #e2e8f0 #e2e8f0 #fff #e2e8f0 !important;
+    background-color: #f8f9fa !important;
+    color: var(--bs-secondary) !important;
+}
+
+[data-bs-theme="dark"] .nav-tabs .nav-link:hover:not(.active) {
+    border-color: #343a40 #343a40 #212529 #343a40 !important;
+    background-color: #2b3035 !important;
+}
+
+/* SweetAlert2 Toast Custom Classes & Overrides */
+.swal2-popup.swal2-toast {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Success Toast */
+.swal2-popup.swal2-toast.swal2-success-toast {
+    background-color: #10b981 !important;
+    color: #ffffff !important;
+}
+.swal2-popup.swal2-toast.swal2-success-toast .swal2-title {
+    color: #ffffff !important;
+}
+.swal2-popup.swal2-toast.swal2-success-toast .swal2-icon.swal2-success {
+    border-color: rgba(255, 255, 255, 0.5) !important;
+}
+.swal2-popup.swal2-toast.swal2-success-toast .swal2-icon.swal2-success [class^='swal2-success-line'] {
+    background-color: #ffffff !important;
+}
+.swal2-popup.swal2-toast.swal2-success-toast .swal2-icon.swal2-success .swal2-success-ring {
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Error Toast */
+.swal2-popup.swal2-toast.swal2-error-toast {
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+}
+.swal2-popup.swal2-toast.swal2-error-toast .swal2-title {
+    color: #ffffff !important;
+}
+.swal2-popup.swal2-toast.swal2-error-toast .swal2-icon.swal2-error {
+    border-color: rgba(255, 255, 255, 0.5) !important;
+}
+.swal2-popup.swal2-toast.swal2-error-toast .swal2-icon.swal2-error [class^='swal2-x-mark-line'] {
+    background-color: #ffffff !important;
+}
+
+/* Warning Toast */
+.swal2-popup.swal2-toast.swal2-warning-toast {
+    background-color: #f59e0b !important;
+    color: #ffffff !important;
+}
+.swal2-popup.swal2-toast.swal2-warning-toast .swal2-title {
+    color: #ffffff !important;
+}
+.swal2-popup.swal2-toast.swal2-warning-toast .swal2-icon.swal2-warning {
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    color: #ffffff !important;
+}
+
+/* Info Toast */
+.swal2-popup.swal2-toast.swal2-info-toast {
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+}
+.swal2-popup.swal2-toast.swal2-info-toast .swal2-title {
+    color: #ffffff !important;
+}
+.swal2-popup.swal2-toast.swal2-info-toast .swal2-icon.swal2-info {
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    color: #ffffff !important;
+}
+
+/* Custom Searchable Select & Modal Polish */
+.searchable-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.searchable-select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1060 !important;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.modal-dialog-scrollable .modal-body {
+    overflow-y: auto;
+}
+
+#modalMembersTable td {
+    vertical-align: top;
 }

@@ -15,7 +15,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                     <i class="bi bi-arrow-left"></i> Reports Center
                 </a>
                 <h3 class="fw-bold mb-1 text-dark"><?= escape($pageTitle) ?></h3>
-                <p class="text-muted small mb-0">Overview of key healthcare indicators, consultations, immunizations, and medicine allocations.</p>
+                <p class="text-muted small mb-0">Overview of key healthcare indicators, consultations, immunizations, medicine allocations, and family planning distributions.</p>
             </div>
             
             <div class="d-flex gap-2 d-print-none">
@@ -131,7 +131,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                             <i class="bi bi-capsule-prescription"></i>
                         </div>
                         <div>
-                            <span class="text-muted small d-block">Medicines Distributed</span>
+                            <span class="text-muted small d-block">Medicine / Family Planning Distributed</span>
                             <strong class="text-dark fs-3"><?= number_format($reportData['medicines_distributed']) ?></strong>
                             <span class="d-block text-muted small mt-1">Units / Tablets Dispensed</span>
                         </div>
@@ -161,7 +161,7 @@ require_once LAYOUT_PATH . 'sidebar.php';
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link fw-semibold" id="medicines-tab" data-bs-toggle="tab" data-bs-target="#medicines-pane" type="button" role="tab">
-                            <i class="bi bi-capsule me-1"></i> Medicine Distributions (<?= count($reportData['medicines_list']) ?>)
+                            <i class="bi bi-capsule me-1"></i> Medicine & Family Planning (<?= count($reportData['medicines_list']) ?>)
                         </button>
                     </li>
                 </ul>
@@ -181,7 +181,6 @@ require_once LAYOUT_PATH . 'sidebar.php';
                                         <th>Gender</th>
                                         <th>Age</th>
                                         <th>Contact Number</th>
-                                        <th>Barangay Location</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -193,13 +192,8 @@ require_once LAYOUT_PATH . 'sidebar.php';
                                                 <td><?= gender_badge($r['gender']) ?></td>
                                                 <td><?= escape($r['age']) ?> yrs</td>
                                                 <td><?= escape($r['contact_number'] ?: 'N/A') ?></td>
-                                                <td><?= escape($r['barangay']) ?></td>
                                             </tr>
                                         <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <tr>
-                                            <td colspan="6" class="text-center py-4 text-muted">No resident service records found for the selected period.</td>
-                                        </tr>
                                     <?php endif; ?>
                                 </tbody>
                             </table>
@@ -238,10 +232,6 @@ require_once LAYOUT_PATH . 'sidebar.php';
                                                 <td><?= escape($c['worker_name']) ?></td>
                                             </tr>
                                         <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <tr>
-                                            <td colspan="7" class="text-center py-4 text-muted">No consultation records found for the selected period.</td>
-                                        </tr>
                                     <?php endif; ?>
                                 </tbody>
                             </table>
@@ -278,10 +268,6 @@ require_once LAYOUT_PATH . 'sidebar.php';
                                                 <td><?= escape($i['worker_name']) ?></td>
                                             </tr>
                                         <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <tr>
-                                            <td colspan="6" class="text-center py-4 text-muted">No immunization records found for the selected period.</td>
-                                        </tr>
                                     <?php endif; ?>
                                 </tbody>
                             </table>
@@ -314,10 +300,6 @@ require_once LAYOUT_PATH . 'sidebar.php';
                                                 <td><?= escape($m['worker_name']) ?></td>
                                             </tr>
                                         <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <tr>
-                                            <td colspan="6" class="text-center py-4 text-muted">No medicine distribution records found for the selected period.</td>
-                                        </tr>
                                     <?php endif; ?>
                                 </tbody>
                             </table>
@@ -342,10 +324,19 @@ $(document).ready(function() {
         });
     }
 
-    $('.summary-table').DataTable({
+    // Initialize DataTables with clean emptyTable message handling
+    const tables = $('.summary-table').DataTable({
         responsive: true,
         pageLength: 10,
-        order: [[0, 'desc']]
+        order: [[0, 'desc']],
+        language: {
+            emptyTable: "No records found for the selected period."
+        }
+    });
+
+    // Auto-recalculate column widths when switching tabs
+    $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function () {
+        $($.fn.dataTable.tables(true)).DataTable().columns.adjust().responsive.recalc();
     });
 });
 </script>
