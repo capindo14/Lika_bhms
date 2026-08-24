@@ -61,8 +61,12 @@ class FamilyController {
         AuthMiddleware::handle();
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
-        
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $head_id = isset($data['head_resident_id']) ? (int)$data['head_resident_id'] : 0;
         $address = trim($data['address'] ?? '');
 
@@ -90,12 +94,16 @@ class FamilyController {
 
         try {
             $insertedId = Family::create($data, $members);
-            
+
+            // Fetch created family to include contextual info
+            $created = Family::getById($insertedId);
+            $summary = $created ? ($created['family_no'] . ' (' . ($created['head_name'] ?? '') . ')') : 'Family profile';
+
             db_log('CREATE_FAMILY_JS', "Created family profile FAM# {$insertedId} via JS CRUD");
-            
+
             echo json_encode([
                 "status" => "success",
-                "message" => "Family profile created successfully.",
+                "message" => "{$summary} created successfully.",
                 "id" => $insertedId
             ]);
         } catch (Exception $e) {
@@ -114,8 +122,12 @@ class FamilyController {
         AuthMiddleware::handle();
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
-        
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $id = isset($data['id']) ? (int)$data['id'] : 0;
         $head_id = isset($data['head_resident_id']) ? (int)$data['head_resident_id'] : 0;
         $address = trim($data['address'] ?? '');
@@ -147,9 +159,12 @@ class FamilyController {
             
             db_log('UPDATE_FAMILY_JS', "Updated family profile ID: {$id} via JS CRUD");
             
+            $updated = Family::getById($id);
+            $summary = $updated ? ($updated['family_no'] . ' (' . ($updated['head_name'] ?? '') . ')') : 'Family profile';
+
             echo json_encode([
                 "status" => "success",
-                "message" => "Family profile updated successfully."
+                "message" => "{$summary} updated successfully."
             ]);
         } catch (Exception $e) {
             echo json_encode([
@@ -167,7 +182,12 @@ class FamilyController {
         AuthMiddleware::handle(['Admin', 'Health Worker']);
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $id = isset($data['id']) ? (int)$data['id'] : 0;
 
         if (!$id) {
@@ -189,9 +209,10 @@ class FamilyController {
 
         if (Family::delete($id)) {
             db_log('DELETE_FAMILY_JS', "Deleted family profile: " . $family['family_no'] . " (ID: " . $id . ") via JS CRUD");
+            $summary = $family['family_no'] . ' (' . ($family['head_name'] ?? '') . ')';
             echo json_encode([
                 "status" => "success",
-                "message" => "Family profile deleted successfully."
+                "message" => "{$summary} deleted successfully."
             ]);
         } else {
             echo json_encode([

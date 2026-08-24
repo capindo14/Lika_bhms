@@ -64,6 +64,28 @@ if (!function_exists('sanitize_array')) {
     }
 }
 
+if (!function_exists('read_json_input')) {
+    /**
+     * Safely parse a JSON request body and normalize it.
+     *
+     * @return array
+     * @throws InvalidArgumentException
+     */
+    function read_json_input(): array {
+        $raw = file_get_contents('php://input');
+        if ($raw === false || trim($raw) === '') {
+            throw new InvalidArgumentException('Empty request body.');
+        }
+
+        $data = json_decode($raw, true);
+        if (!is_array($data)) {
+            throw new InvalidArgumentException('Invalid JSON payload.');
+        }
+
+        return sanitize_array($data);
+    }
+}
+
 if (!function_exists('db_log')) {
     /**
      * Dynamic helper to log user actions in the database logs

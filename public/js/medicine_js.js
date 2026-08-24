@@ -336,27 +336,7 @@ function handleSearchAndFilter() {
     });
 }
 
-/**
- * Helper to display SweetAlert2 dynamic toasts
- */
-function showToast(icon, message) {
-    const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3500,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-            toast.addEventListener('mouseenter', Swal.stopTimer);
-            toast.addEventListener('mouseleave', Swal.resumeTimer);
-        }
-    });
-    
-    Toast.fire({
-        icon: icon,
-        title: message
-    });
-}
+// Use the global `showToast(icon, message)` helper defined in `public/js/app.js`
 
 /**
  * Open the restock modal with target item info
@@ -638,14 +618,14 @@ function deleteDistribution(id, name, qty) {
     const isDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
     
     Swal.fire({
-        title: 'Cancel Distribution?',
-        text: `Are you sure you want to cancel the distribution of ${qty} pcs of ${name}? The stock will be returned to inventory.`,
+        title: 'Delete Distribution?',
+        text: `Are you sure you want to remove the distribution of ${qty} pcs ${name}? The stock will be returned to inventory.`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc3545',
         cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Yes, cancel it!',
-        cancelButtonText: 'No, keep it',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel',
         background: isDarkMode ? '#212529' : '#fff',
         color: isDarkMode ? '#f8f9fa' : '#212529'
     }).then(async (result) => {

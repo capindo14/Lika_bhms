@@ -41,19 +41,56 @@ require_once LAYOUT_PATH . 'sidebar.php';
         <!-- Real-time Search Box and Action Buttons -->
         <div class="row align-items-center mb-4 g-3">
             <div class="col-12 col-md-5 col-lg-4">
-                <div class="input-group shadow-sm border rounded">
+                <div class="input-group shadow-sm border rounded bg-white">
                     <span class="input-group-text bg-white border-0"><i class="bi bi-search text-muted"></i></span>
                     <input type="text" id="residentSearch" class="form-control border-0" placeholder="Search residents...">
+                    <button class="btn btn-light border-start dropdown-toggle text-secondary fw-semibold px-3" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                        <i class="bi bi-funnel"></i> Filters
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end p-3 shadow border-0 rounded-3 mt-1" style="width: 280px;">
+                        <h6 class="dropdown-header px-0 text-dark fw-bold mb-2">Filter Directory</h6>
+                        <div class="mb-3" id="genderFilterGroup">
+                            <label class="form-label small text-muted fw-semibold" for="genderFilter">Gender</label>
+                            <select id="genderFilter" class="form-select form-select-sm shadow-none">
+                                <option value="">All Genders</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="ageFilterGroup">
+                            <label class="form-label small text-muted fw-semibold" for="ageFilter">Age Group</label>
+                            <select id="ageFilter" class="form-select form-select-sm shadow-none">
+                                <option value="">All Age Groups</option>
+                                <option value="infants" id="infantAgeOption">Infants (Under 1)</option>
+                                <option value="children" id="childrenAgeOption">Children (1-12)</option>
+                                <option value="teens">Teens (13-19)</option>
+                                <option value="adults">Adults (20-59)</option>
+                                <option value="seniors">Seniors (60+)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="civilStatusFilterGroup">
+                            <label class="form-label small text-muted fw-semibold" for="civilStatusFilter">Civil Status</label>
+                            <select id="civilStatusFilter" class="form-select form-select-sm shadow-none">
+                                <option value="">All Civil Statuses</option>
+                                <option value="Single">Single</option>
+                                <option value="Married">Married</option>
+                                <option value="Widowed">Widowed</option>
+                                <option value="Divorced">Divorced</option>
+                            </select>
+                        </div>
+                        <div class="mb-1" id="householdRoleFilterGroup">
+                            <label class="form-label small text-muted fw-semibold" for="householdRoleFilter">Household Role</label>
+                            <select id="householdRoleFilter" class="form-select form-select-sm shadow-none">
+                                <option value="">All Roles</option>
+                                <option value="Family Head">Family Head</option>
+                                <option value="Member">Member</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="col-12 col-md-3 col-lg-3" id="genderFilterCol">
-                <select id="genderFilter" class="form-select shadow-sm border rounded fw-semibold text-muted">
-                    <option value="">All Genders</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                </select>
-            </div>
+            <div class="col-12 col-md-3 col-lg-3"></div>
             <div class="col-12 col-md-4 col-lg-5 d-flex justify-content-md-end gap-2">
                 <button type="button" id="btnRegisterResident" class="btn btn-primary" onclick="newResident()">
                     <i class="bi bi-plus-lg me-1"></i> Register Resident

@@ -107,7 +107,7 @@ async function loadFamilies() {
                         <button type="button" onclick="editFamily(${fam.id})" class="btn btn-outline-primary btn-sm rounded-2" title="Edit Profile">
                             <i class="bi bi-pencil"></i>
                         </button>
-                        <button type="button" onclick="deleteFamily(${fam.id}, '${escapeHtml(fam.family_no)}')" class="btn btn-outline-danger btn-sm rounded-2" title="Delete Profile">
+                        <button type="button" onclick="deleteFamily(${fam.id}, '${escapeHtml(fam.family_no)}', '${escapeHtml(fam.head_name)}')" class="btn btn-outline-danger btn-sm rounded-2" title="Delete Profile">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -447,14 +447,14 @@ async function handleFormSubmit(e) {
     }
 }
 
-function deleteFamily(id, familyNo) {
+function deleteFamily(id, familyNo, headName) {
     Swal.fire({
         title: 'Delete Family Profile?',
-        text: `Are you sure you want to delete family profile #${familyNo}? All members will be unlinked.`,
+        text: `Are you sure you want to delete family profile ${familyNo} of ${headName}? All members will be unlinked.`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
+        cancelButtonColor: '#6c757d',
         confirmButtonText: 'Yes, delete it!'
     }).then(async (result) => {
         if (result.isConfirmed) {
@@ -518,27 +518,7 @@ function handleSearch(event) {
 }
 
 
-/**
- * SweetAlert Toast alert helper
- */
-function showToast(icon, message) {
-    const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3500,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-            toast.addEventListener('mouseenter', Swal.stopTimer);
-            toast.addEventListener('mouseleave', Swal.resumeTimer);
-        }
-    });
-
-    Toast.fire({
-        icon: icon,
-        title: message
-    });
-}
+// Use global `showToast(icon, message)` from `public/js/app.js` for consistent toasts
 
 /**
  * Helper to escape HTML characters

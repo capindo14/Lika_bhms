@@ -39,12 +39,14 @@ document.addEventListener('DOMContentLoaded', () => {
         prevBtn.addEventListener('click', () => {
             currentDate.setMonth(currentDate.getMonth() - 1);
             renderCalendar();
+                showFirstScheduledDay();
         });
     }
     if (nextBtn) {
         nextBtn.addEventListener('click', () => {
             currentDate.setMonth(currentDate.getMonth() + 1);
             renderCalendar();
+            showFirstScheduledDay();
         });
     }
 
@@ -53,35 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const dayBox = e.target.closest('.calendar-day-box');
         if (dayBox) {
             const clickedDate = dayBox.getAttribute('data-date');
-            const dayEvents = schedules.filter(ev => ev.date === clickedDate);
-            
-            const dateObj = new Date(clickedDate);
-            const formatTitle = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-            
-            document.getElementById('calendar-day-info').innerHTML = `Schedules for <strong>${formatTitle}</strong>`;
-            
-            let listHTML = '';
-            if (dayEvents.length === 0) {
-                listHTML = `<div class="text-muted text-center py-4 small">No immunizations scheduled on this day.</div>`;
-            } else {
-                dayEvents.forEach(ev => {
-                    const statusClass = ev.status === 'Completed' ? 'success' : (ev.status === 'Upcoming' ? 'warning' : 'danger');
-                    listHTML += `
-                        <div class="list-group-item border rounded-3 p-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="fw-bold text-dark text-truncate" style="max-width: 70%;">${escapeHtml(ev.patient)}</span>
-                                <span class="badge bg-${statusClass} bg-opacity-10 text-${statusClass} border border-${statusClass}-subtle">${ev.status}</span>
-                            </div>
-                            <div class="small text-muted"><i class="bi bi-shield-plus me-1 text-info"></i>Vaccine: ${escapeHtml(ev.vaccine)}</div>
-                            <div class="small text-muted"><i class="bi bi-layers me-1"></i>Dose: ${escapeHtml(ev.dose)}</div>
-                            <div class="d-flex justify-content-end mt-2">
-                                <button type="button" onclick="editImmunization(${ev.id})" class="btn btn-sm btn-light border py-1 px-2.5 small"><i class="bi bi-pencil-square me-1"></i> Update record</button>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-            document.getElementById('calendar-day-list').innerHTML = listHTML;
+            showDaySchedules(clickedDate);
         }
     });
 
@@ -208,6 +182,7 @@ async function loadImmunizations() {
             };
         });
         renderCalendar();
+        showFirstScheduledDay();
     } catch (error) {
         console.error(error);
         showToast('error', 'Failed to fetch immunization records: ' + error.message);
@@ -375,7 +350,7 @@ function deleteImmunization(id, patientName) {
 
     Swal.fire({
         title: 'Delete record?',
-        text: `Are you sure you want to delete immunization record for: ${patientName}?`,
+        text: `Are you sure you want to delete immunization record of ${patientName}?`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc3545',
@@ -531,6 +506,64 @@ function renderCalendar() {
     if (daysContainer) {
         daysContainer.innerHTML = dayBoxes;
     }
+}
+
+/**
+ * Display the first scheduled day in the currently visible month.
+ */
+function showFirstScheduledDay() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstEvent = schedules
+        .filter(event => {
+            const eventDate = new Date(`${event.date}T00:00:00`);
+            return eventDate.getFullYear() === year && eventDate.getMonth() === month;
+        })
+        .sort((first, second) => first.date.localeCompare(second.date))[0];
+
+    const info = document.getElementById('calendar-day-info');
+    if (firstEvent) {
+        showDaySchedules(firstEvent.date);
+    } else if (info) {
+        info.textContent = 'Click a highlighted day in the calendar to see scheduled patient vaccinations.';
+        document.getElementById('calendar-day-list').innerHTML = '';
+    }
+}
+
+/**
+ * Render schedules for a selected calendar date.
+ */
+function showDaySchedules(selectedDate) {
+    const dayEvents = schedules.filter(event => event.date === selectedDate);
+    const dateObj = new Date(`${selectedDate}T00:00:00`);
+    const formatTitle = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    const info = document.getElementById('calendar-day-info');
+    const list = document.getElementById('calendar-day-list');
+
+    if (info) info.innerHTML = `Schedules for <strong>${formatTitle}</strong>`;
+    if (!list) return;
+
+    if (dayEvents.length === 0) {
+        list.innerHTML = '<div class="text-muted text-center py-4 small">No immunizations scheduled on this day.</div>';
+        return;
+    }
+
+    list.innerHTML = dayEvents.map(event => {
+        const statusClass = event.status === 'Completed' ? 'success' : (event.status === 'Upcoming' ? 'warning' : 'danger');
+        return `
+            <div class="list-group-item border rounded-3 p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-bold text-dark text-truncate" style="max-width: 70%;">${escapeHtml(event.patient)}</span>
+                    <span class="badge bg-${statusClass} bg-opacity-10 text-${statusClass} border border-${statusClass}-subtle">${event.status}</span>
+                </div>
+                <div class="small text-muted"><i class="bi bi-shield-plus me-1 text-info"></i>Vaccine: ${escapeHtml(event.vaccine)}</div>
+                <div class="small text-muted"><i class="bi bi-layers me-1"></i>Dose: ${escapeHtml(event.dose)}</div>
+                <div class="d-flex justify-content-end mt-2">
+                    <button type="button" onclick="editImmunization(${event.id})" class="btn btn-sm btn-light border py-1 px-2.5 small"><i class="bi bi-pencil-square me-1"></i> Update record</button>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 /**

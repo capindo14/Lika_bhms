@@ -43,6 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (genderFilter) {
         genderFilter.addEventListener('change', applyFilters);
     }
+    ['ageFilter', 'civilStatusFilter', 'householdRoleFilter'].forEach(filterId => {
+        const filter = document.getElementById(filterId);
+        if (filter) filter.addEventListener('change', applyFilters);
+    });
 
     // Dynamic field listeners for maternal/child conditional fields
     const genderSelect = document.getElementById('resGender');
@@ -57,41 +61,65 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Change status tab active/archived and fetch lists
+ * Change status tab and fetch the matching directory list
  */
 function setStatusFilter(status) {
+    resetDirectoryFilters();
     currentStatusFilter = status;
     
-    // Toggle active classes on tab buttons
+    // Toggle active classes on tab buttons.
     const tabs = {
         'Active': document.getElementById('tabActive'),
         'Pregnant': document.getElementById('tabPregnant'),
         'Infant': document.getElementById('tabInfant'),
         'Archived': document.getElementById('tabArchived')
     };
-    
     Object.keys(tabs).forEach(key => {
         const tab = tabs[key];
         if (!tab) return;
-        if (key === status) {
-            tab.classList.add('active');
-            tab.classList.remove('text-secondary');
-        } else {
-            tab.classList.remove('active');
-            tab.classList.add('text-secondary');
-        }
+        tab.classList.toggle('active', key === status);
+        tab.classList.toggle('text-secondary', key !== status);
     });
 
-    // Hide gender filter under Pregnant tab (since all are Female)
-    const genderFilterCol = document.getElementById('genderFilterCol');
+    // Hide gender filtering under Pregnant because the dataset is female-only.
+    const genderFilterGroup = document.getElementById('genderFilterGroup');
     const genderFilter = document.getElementById('genderFilter');
-    if (genderFilterCol) {
-        if (status === 'Pregnant') {
-            genderFilterCol.style.display = 'none';
-            if (genderFilter) genderFilter.value = ''; // Reset selection to avoid conflicting filters
-        } else {
-            genderFilterCol.style.display = '';
-        }
+    if (genderFilterGroup) {
+        genderFilterGroup.style.display = status === 'Pregnant' ? 'none' : '';
+    }
+    if (genderFilter) {
+        if (status === 'Pregnant') genderFilter.value = '';
+    }
+
+    const infantAgeOption = document.getElementById('infantAgeOption');
+    const childrenAgeOption = document.getElementById('childrenAgeOption');
+    const ageFilter = document.getElementById('ageFilter');
+    const ageFilterGroup = document.getElementById('ageFilterGroup');
+    if (ageFilterGroup) {
+        ageFilterGroup.style.display = status === 'Infant' ? 'none' : '';
+        if (status === 'Infant' && ageFilter) ageFilter.value = '';
+    }
+    if (infantAgeOption) {
+        infantAgeOption.hidden = status === 'Pregnant';
+        if (status === 'Pregnant' && ageFilter?.value === 'infants') ageFilter.value = '';
+    }
+    if (childrenAgeOption) {
+        childrenAgeOption.hidden = status === 'Pregnant';
+        if (status === 'Pregnant' && ageFilter?.value === 'children') ageFilter.value = '';
+    }
+
+    const civilStatusFilterGroup = document.getElementById('civilStatusFilterGroup');
+    const civilStatusFilter = document.getElementById('civilStatusFilter');
+    if (civilStatusFilterGroup) {
+        civilStatusFilterGroup.style.display = status === 'Infant' ? 'none' : '';
+        if (status === 'Infant' && civilStatusFilter) civilStatusFilter.value = '';
+    }
+
+    const householdRoleFilterGroup = document.getElementById('householdRoleFilterGroup');
+    const householdRoleFilter = document.getElementById('householdRoleFilter');
+    if (householdRoleFilterGroup) {
+        householdRoleFilterGroup.style.display = ['Pregnant', 'Infant'].includes(status) ? 'none' : '';
+        if (['Pregnant', 'Infant'].includes(status) && householdRoleFilter) householdRoleFilter.value = '';
     }
 
     // Hide Register Resident button except on Active profiles tab
@@ -106,6 +134,16 @@ function setStatusFilter(status) {
 
     // Refresh directory
     loadResidents();
+}
+
+/**
+ * Clear filters so each resident status tab starts independently.
+ */
+function resetDirectoryFilters() {
+    ['residentSearch', 'genderFilter', 'ageFilter', 'civilStatusFilter', 'householdRoleFilter'].forEach(filterId => {
+        const filter = document.getElementById(filterId);
+        if (filter) filter.value = '';
+    });
 }
 
 /**
@@ -173,6 +211,9 @@ async function loadResidents() {
             }
 
             const tr = document.createElement('tr');
+            tr.dataset.age = String(res.age);
+            tr.dataset.civilStatus = res.civil_status || '';
+            tr.dataset.householdRole = isHead ? 'Family Head' : 'Member';
             tr.innerHTML = `
                 <td class="font-monospace fw-semibold text-primary">${escapeHtml(res.resident_id)}</td>
                 <td>
@@ -645,6 +686,9 @@ function restoreResident(id, name) {
 function applyFilters() {
     const searchVal = document.getElementById('residentSearch')?.value.toLowerCase().trim() || '';
     const genderVal = document.getElementById('genderFilter')?.value || '';
+    const ageVal = document.getElementById('ageFilter')?.value || '';
+    const civilStatusVal = document.getElementById('civilStatusFilter')?.value || '';
+    const householdRoleVal = document.getElementById('householdRoleFilter')?.value || '';
     const rows = document.querySelectorAll('#residentTable tr');
 
     rows.forEach(row => {
@@ -661,8 +705,18 @@ function applyFilters() {
             const genderCellText = row.cells[2]?.innerText.trim() || '';
             matchesGender = (genderCellText === genderVal);
         }
+
+        const age = Number(row.dataset.age);
+        const matchesAge = ageVal === '' ||
+            (ageVal === 'infants' && age < 1) ||
+            (ageVal === 'children' && age >= 1 && age <= 12) ||
+            (ageVal === 'teens' && age >= 13 && age <= 19) ||
+            (ageVal === 'adults' && age >= 20 && age <= 59) ||
+            (ageVal === 'seniors' && age >= 60);
+        const matchesCivilStatus = civilStatusVal === '' || row.dataset.civilStatus === civilStatusVal;
+        const matchesHouseholdRole = householdRoleVal === '' || row.dataset.householdRole === householdRoleVal;
         
-        // 3. Toggle row visibility
-        row.style.display = (matchesSearch && matchesGender) ? '' : 'none';
+        // Toggle row visibility
+        row.style.display = (matchesSearch && matchesGender && matchesAge && matchesCivilStatus && matchesHouseholdRole) ? '' : 'none';
     });
 }

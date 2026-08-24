@@ -123,18 +123,33 @@ class Medicine {
      * @return bool
      */
     public static function deductStock(int $id, int $quantity): bool {
-        $db = Database::getConnection();
-        
-        // Fetch current stock
-        $med = self::getById($id);
-        if (!$med) throw new Exception("Medicine not found.");
-        
-        if ($med['stock_qty'] < $quantity) {
-            throw new Exception("Insufficient stock quantity available. Available: " . $med['stock_qty']);
+        if ($quantity <= 0) {
+            throw new Exception("Quantity must be greater than zero.");
         }
-        
-        $stmt = $db->prepare("UPDATE medicines SET stock_qty = stock_qty - :qty WHERE id = :id");
-        return $stmt->execute([':id' => $id, ':qty' => $quantity]);
+
+        $db = Database::getConnection();
+
+        $stmt = $db->prepare("
+            UPDATE medicines
+                        SET stock_qty = stock_qty - :deduct_qty
+            WHERE id = :id
+              AND deleted_at IS NULL
+                            AND stock_qty >= :available_qty
+        ");
+
+        $stmt->execute([
+            ':id' => $id,
+                        ':deduct_qty' => $quantity,
+                        ':available_qty' => $quantity
+        ]);
+
+        if ($stmt->rowCount() !== 1) {
+            $current = self::getById($id);
+            $available = $current['stock_qty'] ?? 0;
+            throw new Exception("Insufficient stock quantity available. Available: " . $available);
+        }
+
+        return true;
     }
 
     /**

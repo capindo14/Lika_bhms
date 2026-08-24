@@ -61,8 +61,10 @@ define('VIEW_PATH', __DIR__ . '/../../views/');
 define('SESSION_TIMEOUT', 1800); // 30 Minutes
 
 // Error Reporting
-error_reporting(E_ALL);
-ini_set('display_errors', 1); // Set to 0 in production
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+$debugMode = getenv('APP_DEBUG');
+$debugMode = $debugMode === false || $debugMode === '' ? '0' : strtolower(trim((string)$debugMode));
+ini_set('display_errors', in_array($debugMode, ['1', 'true', 'yes', 'on'], true) ? '1' : '0');
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/../../logs/error.log');
 

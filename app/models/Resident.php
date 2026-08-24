@@ -23,6 +23,10 @@ class Resident {
         } elseif ($status === 'Infant') {
             $whereClause = "r.status = 'Active' AND (TIMESTAMPDIFF(YEAR, r.birthdate, CURDATE()) < 5 OR (r.child_feeding_type IS NOT NULL AND r.child_feeding_type != '' AND r.child_feeding_type != 'N/A'))";
             $params = [];
+        } elseif ($status === 'FamilyHead') {
+            // Return only residents flagged as family head
+            $whereClause = "r.status = 'Active' AND r.is_family_head = 1";
+            $params = [];
         }
 
         $stmt = $db->prepare("
