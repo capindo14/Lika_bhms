@@ -111,8 +111,12 @@ class ResidentController {
         AuthMiddleware::handle();
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
-        
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $first_name = trim($data['first_name'] ?? '');
         $last_name = trim($data['last_name'] ?? '');
         $gender = trim($data['gender'] ?? '');
@@ -130,12 +134,15 @@ class ResidentController {
 
         try {
             $insertedId = Resident::create($data);
-            
+
             db_log('CREATE_RESIDENT_JS', "Registered resident via JS CRUD: " . $last_name . ", " . $first_name . " (ID: " . $insertedId . ")");
-            
+
+            $created = Resident::getById($insertedId);
+            $fullName = $created ? ($created['last_name'] . ', ' . $created['first_name']) : ($last_name . ', ' . $first_name);
+
             echo json_encode([
                 "status" => "success",
-                "message" => "Resident registered successfully.",
+                "message" => "Resident {$fullName} registered successfully.",
                 "id" => $insertedId
             ]);
         } catch (Exception $e) {
@@ -154,8 +161,12 @@ class ResidentController {
         AuthMiddleware::handle();
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
-        
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $id = isset($data['id']) ? (int)$data['id'] : 0;
         $first_name = trim($data['first_name'] ?? '');
         $last_name = trim($data['last_name'] ?? '');
@@ -174,12 +185,15 @@ class ResidentController {
 
         try {
             Resident::update($id, $data);
-            
+
             db_log('UPDATE_RESIDENT_JS', "Updated resident via JS CRUD: ID " . $id);
-            
+
+            $updated = Resident::getById($id);
+            $fullName = $updated ? ($updated['last_name'] . ', ' . $updated['first_name']) : 'Resident';
+
             echo json_encode([
                 "status" => "success",
-                "message" => "Resident details updated successfully."
+                "message" => "Resident {$fullName} updated successfully."
             ]);
         } catch (Exception $e) {
             echo json_encode([
@@ -197,8 +211,12 @@ class ResidentController {
         AuthMiddleware::handle(['Admin', 'Health Worker']);
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
-        
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $id = isset($data['id']) ? (int)$data['id'] : 0;
         $action = trim($data['action'] ?? 'Archive');
 
@@ -231,16 +249,18 @@ class ResidentController {
             if ($action === 'Restore') {
                 Resident::setStatus($id, 'Active');
                 db_log('RESTORE_RESIDENT_JS', "Restored resident profile: " . $resident['last_name'] . " (ID: " . $id . ")");
+                $name = $resident['last_name'] . ', ' . $resident['first_name'];
                 echo json_encode([
                     "status" => "success",
-                    "message" => "Resident profile restored successfully."
+                    "message" => "Resident profile for {$name} restored successfully."
                 ]);
             } else {
                 Resident::setStatus($id, 'Archived');
                 db_log('ARCHIVE_RESIDENT_JS', "Archived resident profile: " . $resident['last_name'] . " (ID: " . $id . ")");
+                $name = $resident['last_name'] . ', ' . $resident['first_name'];
                 echo json_encode([
                     "status" => "success",
-                    "message" => "Resident profile archived successfully."
+                    "message" => "Resident profile for {$name} archived successfully."
                 ]);
             }
         } catch (Exception $e) {

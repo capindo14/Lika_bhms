@@ -54,8 +54,12 @@ class MedicineController {
         AuthMiddleware::handle();
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
-        
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $name = trim($data['name'] ?? '');
         $category = trim($data['category'] ?? '');
         $stock_qty = isset($data['stock_qty']) ? (int)$data['stock_qty'] : 0;
@@ -81,9 +85,12 @@ class MedicineController {
             
             db_log('CREATE_MEDICINE_JS', "Added medicine via JS CRUD: " . $name . " (ID: " . $insertedId . ")");
             
+            $med = Medicine::getById($insertedId);
+            $summary = $med ? ($med['name'] . ' (ID: ' . $insertedId . ')') : 'Medicine item';
+
             echo json_encode([
                 "status" => "success",
-                "message" => "Medicine added successfully.",
+                "message" => "{$summary} added successfully.",
                 "id" => $insertedId
             ]);
         } catch (Exception $e) {
@@ -102,8 +109,12 @@ class MedicineController {
         AuthMiddleware::handle();
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
-        
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $id = isset($data['id']) ? (int)$data['id'] : 0;
         $name = trim($data['name'] ?? '');
         $category = trim($data['category'] ?? '');
@@ -130,9 +141,12 @@ class MedicineController {
             
             db_log('UPDATE_MEDICINE_JS', "Updated medicine details via JS CRUD for item ID: " . $id);
             
+            $med = Medicine::getById($id);
+            $summary = $med ? ($med['name'] . ' (ID: ' . $id . ')') : 'Medicine item';
+
             echo json_encode([
                 "status" => "success",
-                "message" => "Medicine details updated successfully."
+                "message" => "{$summary} updated successfully."
             ]);
         } catch (Exception $e) {
             echo json_encode([
@@ -150,7 +164,12 @@ class MedicineController {
         AuthMiddleware::handle(['Admin', 'Health Worker']);
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $id = isset($data['id']) ? (int)$data['id'] : 0;
 
         if (!$id) {
@@ -172,9 +191,10 @@ class MedicineController {
 
         if (Medicine::delete($id)) {
             db_log('DELETE_MEDICINE_JS', "Deleted medicine item via JS CRUD: " . $medicine['name'] . " (ID: " . $id . ")");
+            $summary = $medicine['name'] . ' (ID: ' . $id . ')';
             echo json_encode([
                 "status" => "success",
-                "message" => "Medicine deleted successfully."
+                "message" => "{$summary} deleted successfully."
             ]);
         } else {
             echo json_encode([
@@ -192,7 +212,12 @@ class MedicineController {
         AuthMiddleware::handle(['Admin', 'Health Worker']);
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $id = isset($data['medicine_id']) ? (int)$data['medicine_id'] : 0;
         $qty = isset($data['restock_qty']) ? (int)$data['restock_qty'] : 0;
 
@@ -209,9 +234,10 @@ class MedicineController {
             $med = Medicine::getById($id);
             db_log('RESTOCK_MEDICINE_JS', "Restocked item via JS CRUD: " . $med['name'] . " with quantity: " . $qty);
             
+            $summary = $med ? ($med['name'] . ' (ID: ' . $id . ')') : 'Medicine item';
             echo json_encode([
                 "status" => "success",
-                "message" => "Stock incremented successfully.",
+                "message" => "{$summary} restocked successfully. New stock: {$med['stock_qty']}",
                 "new_stock" => $med['stock_qty']
             ]);
         } catch (Exception $e) {
@@ -241,8 +267,12 @@ class MedicineController {
         AuthMiddleware::handle(['Admin', 'Health Worker']);
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
-        
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $medicine_id = isset($data['medicine_id']) ? (int)$data['medicine_id'] : 0;
         $resident_id = isset($data['resident_id']) ? (int)$data['resident_id'] : 0;
         $quantity = isset($data['quantity']) ? (int)$data['quantity'] : 0;
@@ -261,9 +291,15 @@ class MedicineController {
             $insertedId = Medicine::logDistribution($medicine_id, $resident_id, $quantity, $distribution_date, $user['id']);
             db_log('LOG_DISTRIBUTION', "Logged medicine distribution. ID: " . $insertedId);
 
+            $med = Medicine::getById($medicine_id);
+            $resident = \App\Models\Resident::getById($resident_id);
+            $summaryMed = $med ? $med['name'] : 'Medicine';
+            $summaryRes = $resident ? ($resident['last_name'] . ', ' . $resident['first_name']) : 'Resident';
+
             echo json_encode([
                 "status" => "success",
-                "message" => "Distribution logged successfully."
+                "message" => "Distribution of {$summaryMed} to {$summaryRes} logged successfully.",
+                "distribution_id" => $insertedId
             ]);
         } catch (Exception $e) {
             echo json_encode([
@@ -333,7 +369,12 @@ class MedicineController {
         AuthMiddleware::handle(['Admin', 'Health Worker']);
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $id = isset($data['id']) ? (int)$data['id'] : 0;
 
         if (!$id) {
@@ -346,11 +387,14 @@ class MedicineController {
 
         try {
             Medicine::deleteDistribution($id);
+            $dist = Medicine::getDistributionById($id);
             db_log('DELETE_DISTRIBUTION', "Cancelled/deleted distribution record ID: " . $id);
-            
+            $medName = $dist ? ($dist['medicine_name'] ?? $dist['name'] ?? 'Medicine') : 'Distribution';
+            $residentName = $dist ? ($dist['resident_name'] ?? 'Resident') : 'Resident';
+
             echo json_encode([
                 "status" => "success",
-                "message" => "Distribution transaction cancelled successfully."
+                "message" => "Distribution of {$medName} for {$residentName} cancelled successfully."
             ]);
         } catch (Exception $e) {
             echo json_encode([
@@ -368,7 +412,12 @@ class MedicineController {
         AuthMiddleware::handle(['Admin', 'Health Worker']);
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $id = isset($data['id']) ? (int)$data['id'] : 0;
         $medicine_id = isset($data['medicine_id']) ? (int)$data['medicine_id'] : 0;
         $resident_id = isset($data['resident_id']) ? (int)$data['resident_id'] : 0;
@@ -387,9 +436,13 @@ class MedicineController {
             Medicine::updateDistribution($id, $medicine_id, $resident_id, $quantity, $distribution_date);
             db_log('UPDATE_DISTRIBUTION', "Updated distribution record ID: " . $id);
             
+            $updatedDist = Medicine::getDistributionById($id);
+            $medName = $updatedDist ? ($updatedDist['medicine_name'] ?? $updatedDist['name'] ?? 'Medicine') : 'Distribution';
+            $residentName = $updatedDist ? ($updatedDist['resident_name'] ?? 'Resident') : 'Resident';
+
             echo json_encode([
                 "status" => "success",
-                "message" => "Distribution transaction updated successfully."
+                "message" => "Distribution of {$medName} for {$residentName} updated successfully."
             ]);
         } catch (Exception $e) {
             echo json_encode([

@@ -20,13 +20,36 @@ $medicines = \App\Models\Medicine::getAll();
 
         <!-- Real-time Search Box and Action Buttons -->
         <div class="row align-items-center mb-4 g-3">
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="input-group shadow-sm border rounded">
+            <div class="col-12 col-md-8 col-lg-5">
+                <div class="input-group shadow-sm border rounded bg-white">
                     <span class="input-group-text bg-white border-0"><i class="bi bi-search text-muted"></i></span>
                     <input type="text" id="consultationSearch" class="form-control border-0" placeholder="Search consultations...">
+                    <button class="btn btn-light border-start dropdown-toggle text-secondary fw-semibold px-3" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                        <i class="bi bi-funnel"></i> Filters
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end p-3 shadow border-0 rounded-3 mt-1" style="width: 260px;">
+                        <h6 class="dropdown-header px-0 text-dark fw-bold mb-2">Filter Consultations</h6>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted fw-semibold" for="consultationDateFilter">Date</label>
+                            <select id="consultationDateFilter" class="form-select form-select-sm shadow-none">
+                                <option value="">All Dates</option>
+                                <option value="month">This Month</option>
+                                <option value="week">This Week</option>
+                            </select>
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label small text-muted fw-semibold" for="consultationStatusFilter">Status</label>
+                            <select id="consultationStatusFilter" class="form-select form-select-sm shadow-none">
+                                <option value="">All Statuses</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="col-12 col-md-6 col-lg-8 d-flex justify-content-md-end gap-2">
+            <div class="col-12 col-md-4 col-lg-7 d-flex justify-content-md-end gap-2">
                 <button type="button" class="btn btn-primary" onclick="newConsultation()">
                     <i class="bi bi-plus-lg me-1"></i> Log Consultation
                 </button>

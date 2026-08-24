@@ -77,8 +77,12 @@ class ConsultationController {
         AuthMiddleware::handle();
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
-        
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $resident_id = isset($data['resident_id']) ? (int)$data['resident_id'] : 0;
         $symptoms = trim($data['symptoms'] ?? '');
         $diagnosis = trim($data['diagnosis'] ?? '');
@@ -98,12 +102,16 @@ class ConsultationController {
 
         try {
             $insertedId = Consultation::create($data);
-            
+
+            // Fetch created consultation to include contextual info
+            $created = Consultation::getById($insertedId);
+            $summary = $created ? ($created['consultation_no'] . ' for ' . ($created['patient_name'] ?? $created['resident_name'])) : 'Consultation';
+
             db_log('CREATE_CONSULTATION_JS', "Logged consultation CON# {$insertedId} via JS CRUD");
-            
+
             echo json_encode([
                 "status" => "success",
-                "message" => "Consultation logged successfully.",
+                "message" => "{$summary} logged successfully.",
                 "id" => $insertedId
             ]);
         } catch (Exception $e) {
@@ -122,8 +130,12 @@ class ConsultationController {
         AuthMiddleware::handle();
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
-        
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $id = isset($data['id']) ? (int)$data['id'] : 0;
         $resident_id = isset($data['resident_id']) ? (int)$data['resident_id'] : 0;
         $symptoms = trim($data['symptoms'] ?? '');
@@ -146,9 +158,13 @@ class ConsultationController {
             
             db_log('UPDATE_CONSULTATION_JS', "Updated consultation ID: {$id} via JS CRUD");
             
+            // Return contextual message using consultation no and patient name
+            $updated = Consultation::getById($id);
+            $summary = $updated ? ($updated['consultation_no'] . ' for ' . ($updated['patient_name'] ?? $updated['resident_name'])) : 'Consultation';
+
             echo json_encode([
                 "status" => "success",
-                "message" => "Consultation updated successfully."
+                "message" => "{$summary} updated successfully."
             ]);
         } catch (Exception $e) {
             echo json_encode([
@@ -166,7 +182,12 @@ class ConsultationController {
         AuthMiddleware::handle(['Admin', 'Health Worker']);
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $id = isset($data['id']) ? (int)$data['id'] : 0;
 
         if (!$id) {
@@ -188,9 +209,10 @@ class ConsultationController {
 
         if (Consultation::delete($id)) {
             db_log('DELETE_CONSULTATION_JS', "Deleted consultation: " . $consultation['consultation_no'] . " (ID: " . $id . ") via JS CRUD");
+            $summary = $consultation['consultation_no'] . ' for ' . ($consultation['patient_name'] ?? $consultation['resident_name']);
             echo json_encode([
                 "status" => "success",
-                "message" => "Consultation deleted successfully."
+                "message" => "{$summary} deleted successfully."
             ]);
         } else {
             echo json_encode([

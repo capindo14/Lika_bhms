@@ -125,10 +125,3 @@ class Router {
         <?php
     }
 }
-
-// Global helper function for backward compatibility
-if (!function_exists('handle404')) {
-    function handle404(string $debugMessage = ''): void {
-        (new Router())->handle404($debugMessage);
-    }
-}

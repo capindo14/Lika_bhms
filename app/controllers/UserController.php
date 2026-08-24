@@ -181,8 +181,12 @@ class UserController {
         AuthMiddleware::handle(['Admin']);
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
-        
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $username = trim($data['username'] ?? '');
         $password = trim($data['password'] ?? '');
         $role = trim($data['role'] ?? '');
@@ -207,10 +211,10 @@ class UserController {
             ]);
             
             db_log('CREATE_USER_JS', "Created system account: {$username} ({$role}) via JS CRUD");
-            
+
             echo json_encode([
                 "status" => "success",
-                "message" => "User account created successfully."
+                "message" => "User account {$username} ({$role}) created successfully."
             ]);
         } catch (Exception $e) {
             echo json_encode([
@@ -228,8 +232,12 @@ class UserController {
         AuthMiddleware::handle(['Admin']);
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
-        
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $id = isset($data['id']) ? (int)$data['id'] : 0;
         $username = trim($data['username'] ?? '');
         $role = trim($data['role'] ?? '');
@@ -255,10 +263,10 @@ class UserController {
             ]);
             
             db_log('UPDATE_USER_JS', "Updated user account ID: {$id} via JS CRUD");
-            
+
             echo json_encode([
                 "status" => "success",
-                "message" => "User account updated successfully."
+                "message" => "User account {$username} updated successfully."
             ]);
         } catch (Exception $e) {
             echo json_encode([
@@ -276,7 +284,12 @@ class UserController {
         AuthMiddleware::handle(['Admin']);
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $id = isset($data['id']) ? (int)$data['id'] : 0;
 
         if (!$id) {
@@ -306,9 +319,10 @@ class UserController {
 
         if (User::delete($id)) {
             db_log('DELETE_USER_JS', "Deleted user account: " . $user['username'] . " (ID: " . $id . ") via JS CRUD");
+            $summary = $user['username'] . ' (' . ($user['fullname'] ?? '') . ')';
             echo json_encode([
                 "status" => "success",
-                "message" => "User account deleted successfully."
+                "message" => "User account {$summary} deleted successfully."
             ]);
         } else {
             echo json_encode([

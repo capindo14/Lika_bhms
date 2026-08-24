@@ -62,10 +62,18 @@ document.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('submit', handleFormSubmit);
     }
 
-    // Search filter
+    // Search and filter listeners
     const searchInput = document.getElementById('consultationSearch');
     if (searchInput) {
         searchInput.addEventListener('input', handleSearch);
+    }
+    const dateFilter = document.getElementById('consultationDateFilter');
+    if (dateFilter) {
+        dateFilter.addEventListener('change', handleSearch);
+    }
+    const statusFilter = document.getElementById('consultationStatusFilter');
+    if (statusFilter) {
+        statusFilter.addEventListener('change', handleSearch);
     }
 });
 
@@ -107,6 +115,8 @@ async function loadConsultations() {
                 : '<span class="text-muted small">None</span>';
 
             const tr = document.createElement('tr');
+            tr.dataset.consultationDate = c.consultation_date || '';
+            tr.dataset.consultationStatus = c.status || '';
             tr.innerHTML = `
                 <td class="font-monospace fw-semibold text-primary">${escapeHtml(c.consultation_no)}</td>
                 <td class="small fw-medium">${escapeHtml(c.consultation_date)}</td>
@@ -125,7 +135,7 @@ async function loadConsultations() {
                         <button type="button" onclick="editConsultation(${c.id})" class="btn btn-outline-primary btn-sm rounded-2" title="Edit Log">
                             <i class="bi bi-pencil"></i>
                         </button>
-                        <button type="button" onclick="deleteConsultation(${c.id}, '${escapeHtml(c.consultation_no)}')" class="btn btn-outline-danger btn-sm rounded-2" title="Delete Log">
+                        <button type="button" onclick="deleteConsultation(${c.id}, '${escapeHtml(c.consultation_no)}', '${escapeHtml(c.patient_name)}')" class="btn btn-outline-danger btn-sm rounded-2" title="Delete Log">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -133,8 +143,19 @@ async function loadConsultations() {
             `;
             tbody.appendChild(tr);
         });
+        applyConsultationFilters();
     } catch (error) {
         console.error(error);
+        const tbody = document.getElementById('consultationTable');
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center text-danger py-4">
+                        Unable to load consultation records. Please refresh the page and try again.
+                    </td>
+                </tr>
+            `;
+        }
         showToast('error', 'Failed to fetch consultations: ' + error.message);
     }
 }
@@ -368,12 +389,12 @@ async function handleFormSubmit(event) {
 /**
  * Delete a consultation record
  */
-function deleteConsultation(id, code) {
+function deleteConsultation(id, code, patientName) {
     const isDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
 
     Swal.fire({
         title: 'Delete Log?',
-        text: `Are you sure you want to remove consultation log: ${code}? This cannot be undone.`,
+        text: `Are you sure you want to remove consultation log of ${patientName}? This cannot be undone.`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc3545',
@@ -497,14 +518,39 @@ function printPrescription() {
  * Filter rows locally
  */
 function handleSearch(event) {
-    const keyword = event.target.value.toLowerCase().trim();
+    applyConsultationFilters();
+}
+
+/**
+ * Filter consultations by search text, date range, and status.
+ */
+function applyConsultationFilters() {
+    const keyword = document.getElementById('consultationSearch')?.value.toLowerCase().trim() || '';
+    const dateFilter = document.getElementById('consultationDateFilter')?.value || '';
+    const statusFilter = document.getElementById('consultationStatusFilter')?.value || '';
     const rows = document.querySelectorAll('#consultationTable tr');
+
+    const today = new Date();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const startOfWeek = new Date(today);
+    const dayOfWeek = startOfWeek.getDay();
+    startOfWeek.setDate(startOfWeek.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    startOfMonth.setHours(0, 0, 0, 0);
+    startOfWeek.setHours(0, 0, 0, 0);
+    today.setHours(23, 59, 59, 999);
 
     rows.forEach(row => {
         if (row.cells.length === 1 && row.cells[0].colSpan > 1) return;
         
         const rowText = row.innerText.toLowerCase();
-        row.style.display = rowText.includes(keyword) ? '' : 'none';
+        const consultationDate = new Date(`${row.dataset.consultationDate}T00:00:00`);
+        const matchesSearch = rowText.includes(keyword);
+        const matchesStatus = statusFilter === '' || row.dataset.consultationStatus === statusFilter;
+        const matchesDate = dateFilter === '' ||
+            (dateFilter === 'month' && consultationDate >= startOfMonth && consultationDate <= today) ||
+            (dateFilter === 'week' && consultationDate >= startOfWeek && consultationDate <= today);
+
+        row.style.display = (matchesSearch && matchesStatus && matchesDate) ? '' : 'none';
     });
 }
 

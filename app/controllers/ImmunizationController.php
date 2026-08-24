@@ -58,8 +58,12 @@ class ImmunizationController {
         AuthMiddleware::handle();
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
-        
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $resident_id = isset($data['resident_id']) ? (int)$data['resident_id'] : 0;
         $vaccine_id = isset($data['vaccine_id']) ? (int)$data['vaccine_id'] : 0;
         $dose = trim($data['dose'] ?? '');
@@ -95,12 +99,17 @@ class ImmunizationController {
 
         try {
             $insertedId = Immunization::create($data);
-            
+
             db_log('CREATE_IMMUNIZATION_JS', "Logged immunization record ID: {$insertedId} via JS CRUD");
-            
+
+            $created = Immunization::getById($insertedId);
+            $vaccine = $created['vaccine_name'] ?? null;
+            $residentName = $created ? ($created['resident_name'] ?? null) : null;
+            $summary = $vaccine ? ($vaccine . ' for ' . ($residentName ?? 'Resident')) : 'Immunization record';
+
             echo json_encode([
                 "status" => "success",
-                "message" => "Immunization record saved successfully.",
+                "message" => "{$summary} saved successfully.",
                 "id" => $insertedId
             ]);
         } catch (Exception $e) {
@@ -119,8 +128,12 @@ class ImmunizationController {
         AuthMiddleware::handle();
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
-        
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $id = isset($data['id']) ? (int)$data['id'] : 0;
         $resident_id = isset($data['resident_id']) ? (int)$data['resident_id'] : 0;
         $vaccine_id = isset($data['vaccine_id']) ? (int)$data['vaccine_id'] : 0;
@@ -157,12 +170,17 @@ class ImmunizationController {
 
         try {
             Immunization::update($id, $data);
-            
+
             db_log('UPDATE_IMMUNIZATION_JS', "Updated immunization record ID: {$id} via JS CRUD");
-            
+
+            $updated = Immunization::getById($id);
+            $vaccine = $updated['vaccine_name'] ?? null;
+            $residentName = $updated ? ($updated['resident_name'] ?? null) : null;
+            $summary = $vaccine ? ($vaccine . ' for ' . ($residentName ?? 'Resident')) : 'Immunization record';
+
             echo json_encode([
                 "status" => "success",
-                "message" => "Immunization details updated successfully."
+                "message" => "{$summary} updated successfully."
             ]);
         } catch (Exception $e) {
             echo json_encode([
@@ -180,7 +198,12 @@ class ImmunizationController {
         AuthMiddleware::handle(['Admin', 'Health Worker']);
         header('Content-Type: application/json');
 
-        $data = json_decode(file_get_contents("php://input"), true);
+        try {
+            $data = read_json_input();
+        } catch (InvalidArgumentException $e) {
+            json_response(false, $e->getMessage(), [], 400);
+        }
+
         $id = isset($data['id']) ? (int)$data['id'] : 0;
 
         if (!$id) {
@@ -202,9 +225,10 @@ class ImmunizationController {
 
         if (Immunization::delete($id)) {
             db_log('DELETE_IMMUNIZATION_JS', "Deleted immunization record ID: {$id} via JS CRUD");
+            $summary = ($record['vaccine_name'] ?? 'Immunization') . ' for ' . ($record['resident_name'] ?? 'Resident');
             echo json_encode([
                 "status" => "success",
-                "message" => "Immunization record deleted successfully."
+                "message" => "{$summary} deleted successfully."
             ]);
         } else {
             echo json_encode([

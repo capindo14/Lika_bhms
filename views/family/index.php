@@ -2,8 +2,9 @@
 require_once LAYOUT_PATH . 'header.php';
 require_once LAYOUT_PATH . 'sidebar.php';
 
-// Load active residents directly in the view for the dropdown selectors
-$residents = \App\Models\Resident::getAll('Active');
+// Load designated family heads for the Head dropdown and all active residents for member selection
+$heads = \App\Models\Resident::getAll('FamilyHead');
+$allResidents = \App\Models\Resident::getAll('Active');
 ?>
 
 <div class="main-content-wrapper">
@@ -85,7 +86,7 @@ $residents = \App\Models\Resident::getAll('Active');
                             <label for="modalHeadId" class="form-label fw-semibold small">Designated Family Head <span class="text-danger">*</span></label>
                             <select class="form-select searchable-select" id="modalHeadId" name="head_resident_id" required>
                                 <option value="" selected disabled>Select Resident Head</option>
-                                <?php foreach ($residents as $res): ?>
+                                <?php foreach ($heads as $res): ?>
                                     <option value="<?= $res['id'] ?>" data-address="<?= escape($res['address']) ?>" data-gender="<?= escape($res['gender']) ?>">
                                         <?= escape($res['last_name'] . ', ' . $res['first_name'] . ' (' . $res['resident_id'] . ')') ?>
                                     </option>
@@ -100,7 +101,8 @@ $residents = \App\Models\Resident::getAll('Active');
 
                         <div class="col-12 col-md-6">
                             <label for="modalAddress" class="form-label fw-semibold small">Family Address <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="modalAddress" name="address" rows="2" required placeholder="Will auto-fill from selected head..."></textarea>
+                            <textarea class="form-control" id="modalAddress" name="address" rows="2" required readonly placeholder="Auto-filled from selected head — not editable."></textarea>
+                            <small class="text-muted d-block mt-1">This address is taken from the selected resident's details and cannot be edited here.</small>
                             <div class="invalid-feedback">Family address is required.</div>
                         </div>
                     </div>
@@ -171,7 +173,7 @@ $residents = \App\Models\Resident::getAll('Active');
 <div class="d-none">
     <select id="memberDropdownTemplate">
         <option value="" selected disabled>Select Household Member</option>
-        <?php foreach ($residents as $res): ?>
+        <?php foreach ($allResidents as $res): ?>
             <option value="<?= $res['id'] ?>">
                 <?= escape($res['last_name'] . ', ' . $res['first_name'] . ' (' . $res['resident_id'] . ')') ?>
             </option>
